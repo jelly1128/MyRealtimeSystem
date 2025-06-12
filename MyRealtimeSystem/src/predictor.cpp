@@ -1,6 +1,8 @@
 #include "predictor.h"
 #include <torch/torch.h>
 
+//static bool saved = false;  # デバッグ用フラグ
+
 bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) {
     try {
         model = torch::jit::load(modelPath);
@@ -15,9 +17,18 @@ bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) 
 }
 
 std::vector<float> predictFrame(const cv::Mat& frame, torch::jit::script::Module& model, int inputWidth, int inputHeight) {
+    // --- (0) マスク適用（前処理） ---
+    cv::Mat masked;
+    cv::Mat mask = cv::imread("images/mask.png", cv::IMREAD_GRAYSCALE);
+    if (mask.size() != frame.size()) {
+        std::cerr << "マスクサイズが入力画像と一致しません" << std::endl;
+        // return ... or resize(mask, ...)
+    }
+    cv::bitwise_and(frame, frame, masked, mask);
+
     // --- (1) クロップ ---
     cv::Rect cropBox(330, 25, 1260, 970);
-    cv::Mat cropped = frame(cropBox).clone();
+    cv::Mat cropped = masked(cropBox).clone();
 
     // --- (2) リサイズ + カラーチャンネル変換 ---
     cv::Mat resized, rgb;
@@ -34,6 +45,13 @@ std::vector<float> predictFrame(const cv::Mat& frame, torch::jit::script::Module
     //inputTensor[0][0] = inputTensor[0][0].sub_(0.485).div_(0.229);
     //inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
     //inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
+
+	// デバッグ用に画像を保存
+    /*if (!saved) {
+        cv::imwrite("debug_cropped.png", cropped);
+        cv::imwrite("debug_resized.png", resized);
+        saved = true;
+    }*/
 
     inputTensor = inputTensor.to(torch::kCUDA);
 
