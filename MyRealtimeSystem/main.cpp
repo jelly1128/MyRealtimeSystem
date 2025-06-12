@@ -1,8 +1,8 @@
 #include <iostream>
 #include "config.h"
-#include "video_loader.h"
-#include "predictor.h"
-#include "result_writer.h"
+#include "src/video_loader.h"
+#include "src/predictor.h"
+#include "src/result_writer.h"
 
 int main() {
     std::vector<cv::Mat> frames;
