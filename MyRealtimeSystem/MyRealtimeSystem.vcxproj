@@ -132,11 +132,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="config.h" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="test_enviroment.cpp" />
-    <ClCompile Include="test_from_video.cpp" />
-    <ClCompile Include="test_organ_model.cpp" />
-    <ClCompile Include="test_treatment_model.cpp" />
+    <ClCompile Include="predictor.cpp" />
+    <ClCompile Include="result_writer.cpp" />
+    <ClCompile Include="video_loader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="predictor.h" />
+    <ClInclude Include="result_writer.h" />
+    <ClInclude Include="video_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
