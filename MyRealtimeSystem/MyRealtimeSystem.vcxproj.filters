@@ -33,6 +33,15 @@
     <ClCompile Include="src\video_loader.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\binarizer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sliding_window.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\timeline_writer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\predictor.h">
@@ -42,6 +51,15 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\video_loader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\binarizer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sliding_window.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\timeline_writer.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

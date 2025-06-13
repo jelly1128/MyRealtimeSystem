@@ -80,6 +80,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,6 +95,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,6 +108,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,11 +125,12 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\cudnn\include;D:\SDK\opencv-build\install\include</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>torch.lib;c10.lib;torch_cuda.lib;torch_cpu.lib;cudnn.lib;cudart.lib;cublas.lib;curand.lib;cusolver.lib;cufft.lib;cuda.lib;opencv_core4120.lib;opencv_imgproc4120.lib;opencv_highgui4120.lib;opencv_imgcodecs4120.lib;opencv_videoio4120.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>msvcprt.lib;torch.lib;c10.lib;torch_cuda.lib;torch_cpu.lib;cudnn.lib;cudart.lib;cublas.lib;curand.lib;cusolver.lib;cufft.lib;cuda.lib;opencv_core4120.lib;opencv_imgproc4120.lib;opencv_highgui4120.lib;opencv_imgcodecs4120.lib;opencv_videoio4120.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/INCLUDE:"?warp_size@cuda@at@@YAHXZ" %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\cudnn\lib\x64;D:\SDK\opencv-build\install\x64\vc17\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -134,14 +138,19 @@
   <ItemGroup>
     <ClCompile Include="config.h" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\binarizer.cpp" />
     <ClCompile Include="src\predictor.cpp" />
     <ClCompile Include="src\result_writer.cpp" />
+    <ClCompile Include="src\sliding_window.cpp" />
+    <ClCompile Include="src\timeline_writer.cpp" />
     <ClCompile Include="src\video_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\binarizer.h" />
     <ClInclude Include="src\predictor.h" />
     <ClInclude Include="src\result_writer.h" />
+    <ClInclude Include="src\sliding_window.h" />
+    <ClInclude Include="src\timeline_writer.h" />
     <ClInclude Include="src\video_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,26 +1,31 @@
-#include "result_writer.h"
 #include <fstream>
 #include <iomanip>
+#include "result_writer.h"
 
-bool saveProbabilitiesToCSV(const std::string& filename, const std::vector<std::vector<float>>& allProbs) {
+template<typename T>
+bool saveMatrixToCSV(const std::string& filename,
+                     const std::vector<std::vector<T>>& data,
+                     const std::string& prefix) {
     std::ofstream ofs(filename);
-    if (!ofs.is_open()) {
-        return false;
-    }
+    if (!ofs.is_open()) return false;
 
-    // ヘッダー行
+    // ヘッダー
     ofs << "frame";
-    if (!allProbs.empty()) {
-        for (int i = 0; i < allProbs[0].size(); ++i) {
-            ofs << ",class_" << i;
+    if (!data.empty()) {
+        for (int i = 0; i < data[0].size(); ++i) {
+            ofs << "," << prefix << i;
         }
     }
     ofs << "\n";
 
-    for (size_t i = 0; i < allProbs.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i) {
         ofs << i;
-        for (float val : allProbs[i]) {
-            ofs << "," << std::fixed << std::setprecision(6) << val;
+        for (const auto& val : data[i]) {
+            if constexpr (std::is_floating_point<T>::value) {
+                ofs << "," << std::fixed << std::setprecision(6) << val;
+            } else {
+                ofs << "," << val;
+            }
         }
         ofs << "\n";
     }
@@ -28,3 +33,7 @@ bool saveProbabilitiesToCSV(const std::string& filename, const std::vector<std::
     ofs.close();
     return true;
 }
+
+// 明示的なインスタンス化（cpp側で使いたい場合）
+template bool saveMatrixToCSV<float>(const std::string&, const std::vector<std::vector<float>>&, const std::string&);
+template bool saveMatrixToCSV<int>(const std::string&, const std::vector<std::vector<int>>&, const std::string&);

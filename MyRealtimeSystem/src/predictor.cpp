@@ -1,8 +1,6 @@
 #include "predictor.h"
 #include <torch/torch.h>
 
-//static bool saved = false;  # デバッグ用フラグ
-
 bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) {
     try {
         model = torch::jit::load(modelPath);
@@ -16,23 +14,30 @@ bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) 
     }
 }
 
+static bool saved = false;  // デバッグ用フラグ
+
 std::vector<float> predictFrame(const cv::Mat& frame, torch::jit::script::Module& model, int inputWidth, int inputHeight) {
     // --- (0) マスク適用（前処理） ---
-    cv::Mat masked;
-    cv::Mat mask = cv::imread("images/mask.png", cv::IMREAD_GRAYSCALE);
-    if (mask.size() != frame.size()) {
-        std::cerr << "マスクサイズが入力画像と一致しません" << std::endl;
-        // return ... or resize(mask, ...)
-    }
-    cv::bitwise_and(frame, frame, masked, mask);
+    //cv::Mat masked;
+    //cv::Mat mask = cv::imread("images/mask.png", cv::IMREAD_GRAYSCALE);
+    //if (mask.size() != frame.size()) {
+    //    std::cerr << "マスクサイズが入力画像と一致しません" << std::endl;
+    //    // return ... or resize(mask, ...)
+    //}
+    //cv::bitwise_and(frame, frame, masked, mask);
 
     // --- (1) クロップ ---
-    cv::Rect cropBox(330, 25, 1260, 970);
-    cv::Mat cropped = masked(cropBox).clone();
+    /*cv::Rect cropBox(330, 25, 1260, 970);
+    cv::Mat cropped = masked(cropBox).clone();*/
 
     // --- (2) リサイズ + カラーチャンネル変換 ---
-    cv::Mat resized, rgb;
-    cv::resize(cropped, resized, cv::Size(inputWidth, inputHeight));  // e.g. 224x224
+    //cv::Mat resized, rgb;
+    //cv::resize(cropped, resized, cv::Size(inputWidth, inputHeight));  // e.g. 224x224
+
+    // リサイズまでできている場合
+	cv::Mat resized, rgb;
+    resized = frame;
+
     cv::cvtColor(resized, rgb, cv::COLOR_BGR2RGB);
     rgb.convertTo(rgb, CV_32F, 1.0 / 255.0);
 
@@ -47,11 +52,11 @@ std::vector<float> predictFrame(const cv::Mat& frame, torch::jit::script::Module
     //inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
 
 	// デバッグ用に画像を保存
-    /*if (!saved) {
-        cv::imwrite("debug_cropped.png", cropped);
+    if (!saved) {
+        //cv::imwrite("debug_cropped.png", cropped);
         cv::imwrite("debug_resized.png", resized);
         saved = true;
-    }*/
+    }
 
     inputTensor = inputTensor.to(torch::kCUDA);
 
