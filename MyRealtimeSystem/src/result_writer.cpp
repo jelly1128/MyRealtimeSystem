@@ -34,6 +34,16 @@ bool saveMatrixToCSV(const std::string& filename,
     return true;
 }
 
-// 明示的なインスタンス化（cpp側で使いたい場合）
-template bool saveMatrixToCSV<float>(const std::string&, const std::vector<std::vector<float>>&, const std::string&);
+// ここで明示的にインスタンス化
 template bool saveMatrixToCSV<int>(const std::string&, const std::vector<std::vector<int>>&, const std::string&);
+template bool saveMatrixToCSV<float>(const std::string&, const std::vector<std::vector<float>>&, const std::string&);
+
+// 1次元ラベルベクトルをCSV保存
+bool saveLabelsToCSV(const std::string& filename, const std::vector<int>& labels, const std::string& prefix) {
+    std::ofstream ofs(filename);
+    if (!ofs.is_open()) return false;
+    for (size_t i = 0; i < labels.size(); ++i) {
+        ofs << prefix << i << "," << labels[i] << "\n";
+    }
+    return true;
+}

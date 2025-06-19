@@ -8,3 +8,7 @@ template<typename T>
 bool saveMatrixToCSV(const std::string& filename,
     const std::vector<std::vector<T>>& data,
     const std::string& prefix = "class_");
+
+bool saveLabelsToCSV(const std::string& filename,
+    const std::vector<int>& labels,
+    const std::string& prefix);

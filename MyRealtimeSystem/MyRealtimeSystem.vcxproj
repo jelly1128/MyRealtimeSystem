@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>D:\SDK\libtorch\include;D:\SDK\libtorch\include\torch\csrc\api\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\SDK\libtorch\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.29.30133\lib\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\SDK\libtorch\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -126,6 +126,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\cudnn\include;D:\SDK\opencv-build\install\include</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +138,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.h" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\binarizer.cpp" />
     <ClCompile Include="src\predictor.cpp" />
     <ClCompile Include="src\result_writer.cpp" />

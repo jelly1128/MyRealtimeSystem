@@ -42,8 +42,7 @@ int main() {
 	// 推論結果のバイナリ化
     std::vector<std::vector<int>> hardLabels = binarizeProbabilities(allProbs, 0.5);
 
-    // === 5. 主クラスをスライディングウィンドウで抽出 ===
-    // hardLabels: [N][15] → 主クラスのみ使用
+    //hardLabels: [N][15] → 主クラスのみ使用
     std::vector<std::vector<int>> hardLabelsMain;
     for (const auto& vec : hardLabels) {
         hardLabelsMain.emplace_back(vec.begin(), vec.begin() + 6);  // 0〜5の主クラスのみ
@@ -66,11 +65,18 @@ int main() {
         std::cout << "ハードラベルを " << OUTPUT_LABELS_CSV << " に保存しました。" << std::endl;
     }
 
+    if (!saveLabelsToCSV(OUTPUT_SMOOTHED_CSV, mainLabels, "smooth_label_")) {
+        std::cerr << "スムーズラベルCSVの保存に失敗しました。" << std::endl;
+    }
+    else {
+        std::cout << "スムーズラベルを " << OUTPUT_SMOOTHED_CSV << " に保存しました。" << std::endl;
+	}
+
     // === 7. タイムライン画像出力 ===
-    if (!drawTimelineImage(mainLabels, TIMELINE_IMAGE_PATH)) {
+    /*if (!drawTimelineImage(mainLabels, TIMELINE_IMAGE_PATH)) {
         std::cerr << "タイムライン画像の出力に失敗しました。" << std::endl;
     }
     else {
         std::cout << "タイムライン画像を " << TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
-    }
+    }*/
 }
