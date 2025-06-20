@@ -48,7 +48,7 @@ int main() {
         hardLabelsMain.emplace_back(vec.begin(), vec.begin() + 6);  // 0〜5の主クラスのみ
     }
 
-    std::vector<int> mainLabels = slidingWindowToSingleLabel(hardLabelsMain, 5, 1, 6);
+    std::vector<int> mainLabels = slidingWindowToSingleLabel(hardLabelsMain, 11, 1, 6);
 
     // === 6. 結果の保存 ===
     if (!saveMatrixToCSV(OUTPUT_PROBS_CSV, allProbs, "prob_")) {

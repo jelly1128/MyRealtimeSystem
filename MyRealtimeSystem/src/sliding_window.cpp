@@ -10,6 +10,8 @@ std::vector<int> slidingWindowToSingleLabel(
     std::vector<int> singleLabels;
     int numFrames = hardLabels.size();
 
+    int halfWin = windowSize / 2;
+	
     for (int start = 0; start <= numFrames - windowSize; start += step) {
         std::vector<int> classCounts(numMainClasses, 0);
 
@@ -23,7 +25,10 @@ std::vector<int> slidingWindowToSingleLabel(
             classCounts.begin(),
             std::max_element(classCounts.begin(), classCounts.end())
         );
-        singleLabels.push_back(maxIdx);
+
+        int centerFrame = start + halfWin;
+        singleLabels.push_back(maxIdx);  // 中心に対応するラベルのみ保存
+        // もし centerFrame を記録したい場合は別ベクトルに保存
     }
 
     return singleLabels;
