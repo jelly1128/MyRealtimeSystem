@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.h" />
+    <ClCompile Include="src\debug.cpp" />
     <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
@@ -149,6 +150,7 @@
     <ClCompile Include="src\video_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\debug.h" />
     <ClInclude Include="src\binarizer.h" />
     <ClInclude Include="src\predictor.h" />
     <ClInclude Include="src\result_writer.h" />

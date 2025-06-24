@@ -18,3 +18,7 @@ const int FRAME_INTERVAL = 10;
 
 const int INPUT_WIDTH = 224;
 const int INPUT_HEIGHT = 224;
+
+const int SLIDING_WINDOW_SIZE = 11; // Number of frames in the sliding window
+const int SLIDING_WINDOW_STEP = 1; // Step size for the sliding window
+const int NUM_SCENE_CLASSES = 6; // Number of main classes in the model

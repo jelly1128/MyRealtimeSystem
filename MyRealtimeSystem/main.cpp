@@ -7,6 +7,8 @@
 #include "src/sliding_window.h"
 #include "src/timeline_writer.h"
 
+#include "src/debug.h"
+
 
 int main() {
 	// 動画ファイルのパスとモデルのパスを設定
@@ -16,67 +18,86 @@ int main() {
         return -1;
     }*/
 
-	// 動画ファイルの読み込み
-	std::vector<cv::Mat> frames;
-	if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
-		std::cerr << "フレームの読み込みに失敗しました" << std::endl;
-	} else {
-		std::cout << "フレームの読み込みに成功しました。" << std::endl;
-		int numFrames = frames.size();
-		std::cout << "読み込んだフレーム数: " << numFrames << std::endl;
+	//// 動画ファイルの読み込み
+	//std::vector<cv::Mat> frames;
+	//if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
+	//	std::cerr << "フレームの読み込みに失敗しました" << std::endl;
+	//} else {
+	//	std::cout << "フレームの読み込みに成功しました。" << std::endl;
+	//	int numFrames = frames.size();
+	//	std::cout << "読み込んだフレーム数: " << numFrames << std::endl;
+	//}
+
+	//// モデルの読み込み
+ //   torch::jit::script::Module model;
+ //   if (!loadModel(TREATMENT_MODEL_PATH, model)) {
+ //       std::cerr << "モデルの読み込みに失敗しました。" << std::endl;
+ //       return -1;
+ //   }
+
+	//// 推論の実行
+ //   std::vector<std::vector<float>> allProbs;
+ //   for (const auto& frame : frames) {
+ //       allProbs.push_back(predictFrame(frame, model, INPUT_WIDTH, INPUT_HEIGHT));
+ //   }
+
+	//// 推論結果のバイナリ化
+ //   std::vector<std::vector<int>> hardLabels = binarizeProbabilities(allProbs, 0.5);
+
+ //   //hardLabels: [N][15] → 主クラスのみ使用
+ //   std::vector<std::vector<int>> hardLabelsMain;
+ //   for (const auto& vec : hardLabels) {
+ //       hardLabelsMain.emplace_back(vec.begin(), vec.begin() + NUM_SCENE_CLASSES);  // 0〜5の主クラスのみ
+ //   }
+
+ //   std::vector<int> mainLabels = slidingWindowToSingleLabel(hardLabelsMain, SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
+
+ //   // 結果の保存 
+ //   if (!saveMatrixToCSV(OUTPUT_PROBS_CSV, allProbs, "prob_")) {
+ //       std::cerr << "確率CSVの保存に失敗しました。" << std::endl;
+ //   }
+ //   else {
+ //       std::cout << "推論確率を " << OUTPUT_PROBS_CSV << " に保存しました。" << std::endl;
+ //   }
+
+ //   if (!saveMatrixToCSV(OUTPUT_LABELS_CSV, hardLabels, "label_")) {
+ //       std::cerr << "ラベルCSVの保存に失敗しました。" << std::endl;
+ //   }
+ //   else {
+ //       std::cout << "ハードラベルを " << OUTPUT_LABELS_CSV << " に保存しました。" << std::endl;
+ //   }
+
+ //   if (!saveLabelsToCSV(OUTPUT_SMOOTHED_CSV, mainLabels, "smooth_label_")) {
+ //       std::cerr << "スムーズラベルCSVの保存に失敗しました。" << std::endl;
+ //   }
+ //   else {
+ //       std::cout << "スムーズラベルを " << OUTPUT_SMOOTHED_CSV << " に保存しました。" << std::endl;
+	//}
+
+	// タイムライン画像の出力用にcsvファイルからメインラベルを読み込む
+	std::vector<int> mainLabels;
+	if (!loadLabelsFromCSV(OUTPUT_SMOOTHED_CSV, mainLabels)) {
+		std::cerr << "スムーズラベルの読み込みに失敗しました。" << std::endl;
+		return -1;
 	}
 
-	// モデルの読み込み
-    torch::jit::script::Module model;
-    if (!loadModel(TREATMENT_MODEL_PATH, model)) {
-        std::cerr << "モデルの読み込みに失敗しました。" << std::endl;
-        return -1;
-    }
+	// csv読み取り確認用
+	std::cout << "読み込んだスムーズラベル数: " << mainLabels.size() << std::endl;
 
-	// 推論の実行
-    std::vector<std::vector<float>> allProbs;
-    for (const auto& frame : frames) {
-        allProbs.push_back(predictFrame(frame, model, INPUT_WIDTH, INPUT_HEIGHT));
-    }
-
-	// 推論結果のバイナリ化
-    std::vector<std::vector<int>> hardLabels = binarizeProbabilities(allProbs, 0.5);
-
-    //hardLabels: [N][15] → 主クラスのみ使用
-    std::vector<std::vector<int>> hardLabelsMain;
-    for (const auto& vec : hardLabels) {
-        hardLabelsMain.emplace_back(vec.begin(), vec.begin() + 6);  // 0〜5の主クラスのみ
-    }
-
-    std::vector<int> mainLabels = slidingWindowToSingleLabel(hardLabelsMain, 11, 1, 6);
-
-    // === 6. 結果の保存 ===
-    if (!saveMatrixToCSV(OUTPUT_PROBS_CSV, allProbs, "prob_")) {
-        std::cerr << "確率CSVの保存に失敗しました。" << std::endl;
-    }
-    else {
-        std::cout << "推論確率を " << OUTPUT_PROBS_CSV << " に保存しました。" << std::endl;
-    }
-
-    if (!saveMatrixToCSV(OUTPUT_LABELS_CSV, hardLabels, "label_")) {
-        std::cerr << "ラベルCSVの保存に失敗しました。" << std::endl;
-    }
-    else {
-        std::cout << "ハードラベルを " << OUTPUT_LABELS_CSV << " に保存しました。" << std::endl;
-    }
-
-    if (!saveLabelsToCSV(OUTPUT_SMOOTHED_CSV, mainLabels, "smooth_label_")) {
-        std::cerr << "スムーズラベルCSVの保存に失敗しました。" << std::endl;
-    }
-    else {
-        std::cout << "スムーズラベルを " << OUTPUT_SMOOTHED_CSV << " に保存しました。" << std::endl;
-	}
-
-    // === 7. タイムライン画像出力 ===
-    /*if (!drawTimelineImage(mainLabels, TIMELINE_IMAGE_PATH)) {
+    // 7. タイムライン画像出力 
+    /*if (!drawTimelineImage(mainLabels, TIMELINE_IMAGE_PATH, NUM_SCENE_CLASSES)) {
         std::cerr << "タイムライン画像の出力に失敗しました。" << std::endl;
     }
     else {
         std::cout << "タイムライン画像を " << TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
     }*/
+
+	// サムネイル画像の選定
+	/*std::vector<cv::Mat> thumbnails;
+	if (!selectThumbnailsFromLabels(mainLabels, VIDEO_FOLDER_PATH, thumbnails, NUM_SCENE_CLASSES)) {
+		std::cerr << "サムネイル画像の選定に失敗しました。" << std::endl;
+		return -1;
+	} else {
+		std::cout << "サムネイル画像の選定に成功しました。" << std::endl;
+	}*/
 }

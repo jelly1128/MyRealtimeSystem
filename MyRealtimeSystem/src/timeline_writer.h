@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include <vector>
 #include <string>
 
@@ -7,7 +6,5 @@
 bool drawTimelineImage(
     const std::vector<int>& labels,
     const std::string& savePath,
-    int numClasses = 6,
-    int frameWidth = 4,
-    int rowHeight = 50
+    int numClasses
 );
