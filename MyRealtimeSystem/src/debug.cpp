@@ -26,16 +26,13 @@ std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string&
         std::vector<float> row;
         int colIndex = 0;
         while (std::getline(ss, value, ',')) {
-            if (colIndex > 0) {  // 2列目以降だけ読み込む
-                try {
-                    row.push_back(std::stof(value));
-                }
-                catch (const std::invalid_argument& e) {
-                    std::cerr << "Invalid number: " << value << std::endl;
-                    row.push_back(0.0f);  // エラー処理（必要に応じて変更）
-                }
+            try {
+                row.push_back(std::stof(value));
             }
-            ++colIndex;
+            catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid number: " << value << std::endl;
+                row.push_back(-1.0);  // エラー処理（必要に応じて変更）
+            }
         }
         if (!row.empty()) {
             probabilities.push_back(row);
@@ -48,31 +45,60 @@ std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string&
 }
 
 
-bool loadMainLabelsFromCSV(const std::string& csvPath, std::vector<int>& labels) {
-    labels.clear();
+std::vector<std::vector<int>> loadFrameBinariesFromCSV(const std::string& csvPath) {
+    std::vector<std::vector<int>> binaries;
     std::ifstream file(csvPath);
     if (!file.is_open()) {
         std::cerr << "[DEBUG] ファイルを開けません: " << csvPath << std::endl;
-        return false;
+        return binaries;  // 空のベクトルを返す
     }
-
     std::string line;
+    // 一行目（ヘッダー）をスキップ
+    std::getline(file, line);
     while (std::getline(file, line)) {
         std::stringstream ss(line);
-        std::string filename, labelStr;
-        // 1列目をスキップし、2列目を取得
-        if (std::getline(ss, filename, ',') && std::getline(ss, labelStr, ',')) {
+        std::string value;
+        std::vector<int> row;
+        while (std::getline(ss, value, ',')) {
             try {
-                int labelValue = std::stoi(labelStr);
-                labels.push_back(labelValue);
-            } catch (...) {
-                std::cerr << "[DEBUG] 無効な値をスキップ(2列目): " << labelStr << std::endl;
-                continue;
+                row.push_back(std::stoi(value));
             }
+            catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid number: " << value << std::endl;
+                row.push_back(-1);
+            }
+        }
+        if (!row.empty()) {
+            binaries.push_back(row);
+        }
+    }
+    if (binaries.empty()) {
+        std::cerr << "[DEBUG] バイナリが1つも読み込まれませんでした。" << std::endl;
+    }
+	return binaries;
+}
+
+
+std::vector<int> loadWindowedSceneLabelsFromCSV(const std::string& csvPath) {
+    std::vector<int> labels;
+    std::ifstream file(csvPath);
+    if (!file.is_open()) {
+        std::cerr << "[DEBUG] ファイルを開けません: " << csvPath << std::endl;
+        return labels;  // 空のベクトルを返す
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        try {
+            int label = std::stoi(line);
+            labels.push_back(label);
+        }
+        catch (const std::invalid_argument& e) {
+            std::cerr << "Invalid label: " << line << std::endl;
+            labels.push_back(-1);
         }
     }
     if (labels.empty()) {
         std::cerr << "[DEBUG] ラベルが1つも読み込まれませんでした。" << std::endl;
     }
-    return !labels.empty();
+	return labels;
 }

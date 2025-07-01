@@ -81,11 +81,32 @@ int main() {
         std::cout << "スムーズラベルを " << OUTPUT_SMOOTHED_CSV << " に保存しました。" << std::endl;
 	}*/
 
-	/* for debug */
     // for debug
-    /*std::vector<std::vector<float>> frameProbabilities;
-    frameProbabilities = loadFrameProbabilitiesFromCSV(DEBUG_PROBS_CSV);*/
-	// タイムライン画像の出力用にcsvファイルからメインラベルを読み込む
+    std::vector<std::vector<float>> frameProbabilities;
+    frameProbabilities = loadFrameProbabilitiesFromCSV(DEBUG_PROBS_CSV);
+
+    std::vector<std::vector<int>> frameBinaryLabels;
+	frameBinaryLabels = loadFrameBinariesFromCSV(DEBUG_LABELS_CSV);
+
+    std::vector<int> windowedSceneLabels;
+	windowedSceneLabels = loadWindowedSceneLabelsFromCSV(DEBUG_SMOOTHED_CSV);
+
+    // 確率の読み取り確認用
+    std::cout << "読み込んだフレーム確率数: " << frameProbabilities.size() << std::endl;
+	// 確率の数量確認用
+	std::cout << "読み込んだフレーム確率の列数: " << (frameProbabilities.empty() ? 0 : frameProbabilities[0].size()) << std::endl;
+
+    // バイナリラベルの読み取り確認用
+	std::cout << "読み込んだフレームバイナリラベル数: " << frameBinaryLabels.size() << std::endl;
+	// バイナリラベルの数量確認用
+	std::cout << "読み込んだフレームバイナリラベルの列数: " << (frameBinaryLabels.empty() ? 0 : frameBinaryLabels[0].size()) << std::endl;
+
+	
+	// スムーズラベルの読み取り確認用
+	std::cout << "読み込んだスムーズラベル数: " << windowedSceneLabels.size() << std::endl;
+
+
+    // タイムライン画像の出力用にcsvファイルからメインラベルを読み込む
 	/*std::vector<int> mainLabels;
 	if (!loadLabelsFromCSV(OUTPUT_SMOOTHED_CSV, mainLabels)) {
 		std::cerr << "スムーズラベルの読み込みに失敗しました。" << std::endl;
