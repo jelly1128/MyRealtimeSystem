@@ -70,6 +70,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.json" />
+    <None Include="README.md" />
   </ItemGroup>
 </Project>

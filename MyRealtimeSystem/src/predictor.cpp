@@ -10,7 +10,6 @@ bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) 
         return true;
     }
     catch (const c10::Error& e) {
-        std::cerr << "ƒ‚ƒfƒ‹‚Ì“Ç‚Ýž‚Ý‚ÉŽ¸”s‚µ‚Ü‚µ‚½: " << e.what() << std::endl;
         return false;
     }
 }

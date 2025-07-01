@@ -8,17 +8,22 @@ const std::string VIDEO_FOLDER_PATH = "images/20211021093634_000001-001/";
 //const std::string VIDEO_FOLDER_PATH = "images/20210524100043_000001-001/";
 //const std::string VIDEO_FOLDER_PATH = "images/20210531112330_000001-001/";
 //const std::string VIDEO_FOLDER_PATH = "images/debug/";
-const std::string OUTPUT_PROBS_CSV = "outputs/demo_output_probs.csv";
-const std::string OUTPUT_LABELS_CSV = "outputs/demo_output_labels.csv";
-const std::string OUTPUT_SMOOTHED_CSV = "outputs/demo_output_smoothed.csv";
-const std::string TIMELINE_IMAGE_PATH = "outputs/timeline.png";
+const std::string VIDEO_NAME = "20211021093634_000001-001"; // “®‰æƒtƒ@ƒCƒ‹–¼
+const std::string OUTPUT_PROBS_CSV = "outputs/" + VIDEO_NAME + "_probs.csv";
+const std::string OUTPUT_LABELS_CSV = "outputs/" + VIDEO_NAME + "_labels.csv";
+const std::string OUTPUT_SMOOTHED_CSV = "outputs/" + VIDEO_NAME + "_smoothed.csv";
 
-const int NUM_CLASSES = 15;
-const int FRAME_INTERVAL = 10;
+//const std::string OUTPUT_PROBS_CSV = "outputs/demo_output_probs.csv";
+//const std::string OUTPUT_LABELS_CSV = "outputs/demo_output_labels.csv";
+//const std::string OUTPUT_SMOOTHED_CSV = "outputs/demo_output_smoothed.csv";
+//const std::string TIMELINE_IMAGE_PATH = "outputs/timeline.png";
 
-const int INPUT_WIDTH = 224;
-const int INPUT_HEIGHT = 224;
+constexpr int NUM_CLASSES = 15;
+constexpr int FRAME_INTERVAL = 10;
 
-const int SLIDING_WINDOW_SIZE = 11; // Number of frames in the sliding window
-const int SLIDING_WINDOW_STEP = 1; // Step size for the sliding window
-const int NUM_SCENE_CLASSES = 6; // Number of main classes in the model
+constexpr int INPUT_WIDTH = 224;
+constexpr int INPUT_HEIGHT = 224;
+
+constexpr int SLIDING_WINDOW_SIZE = 11; // Number of frames in the sliding window
+constexpr int SLIDING_WINDOW_STEP = 1; // Step size for the sliding window
+constexpr int NUM_SCENE_CLASSES = 6; // Number of main classes in the model

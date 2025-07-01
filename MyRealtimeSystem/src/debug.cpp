@@ -4,7 +4,51 @@
 #include <sstream>
 #include <iostream>
 
-bool loadLabelsFromCSV(const std::string& csvPath, std::vector<int>& labels) {
+// CSVファイルからフレームの確率を読み込む関数
+//使い方
+// for debug
+// std::vector<std::vector<float>> frameProbabilities;
+// frameProbabilities = loadFrameProbabilitiesFromCSV(DEBUG_PROBS_CSV);
+std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string& csvPath) {
+    std::vector<std::vector<float>> probabilities;
+    std::ifstream file(csvPath);
+    if (!file.is_open()) {
+        std::cerr << "[DEBUG] ファイルを開けません: " << csvPath << std::endl;
+        return probabilities;  // 空のベクトルを返す
+    }
+    std::string line;
+    // 一行目（ヘッダー）をスキップ
+    std::getline(file, line);
+
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string value;
+        std::vector<float> row;
+        int colIndex = 0;
+        while (std::getline(ss, value, ',')) {
+            if (colIndex > 0) {  // 2列目以降だけ読み込む
+                try {
+                    row.push_back(std::stof(value));
+                }
+                catch (const std::invalid_argument& e) {
+                    std::cerr << "Invalid number: " << value << std::endl;
+                    row.push_back(0.0f);  // エラー処理（必要に応じて変更）
+                }
+            }
+            ++colIndex;
+        }
+        if (!row.empty()) {
+            probabilities.push_back(row);
+		}
+    }
+    if (probabilities.empty()) {
+        std::cerr << "[DEBUG] 確率が1つも読み込まれませんでした。" << std::endl;
+    }
+	return probabilities;
+}
+
+
+bool loadMainLabelsFromCSV(const std::string& csvPath, std::vector<int>& labels) {
     labels.clear();
     std::ifstream file(csvPath);
     if (!file.is_open()) {
