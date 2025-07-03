@@ -266,14 +266,34 @@ int main() {
             }
         }
 
+        const int FRAME_GAP = 15;  // 最低フレーム間隔（3fps換算で5秒）
+
+        // スコア順に並べる
         std::sort(candidates.begin(), candidates.end(), [](const FrameData& a, const FrameData& b) {
             return (a.S_target - a.S_event) > (b.S_target - b.S_event);
             });
 
-        if (candidates.size() > TOP_K) {
-            candidates.resize(TOP_K);
+        // FRAME_GAPを考慮して間隔をあけながらTOP_K件選定
+        std::vector<FrameData> selected;
+        std::set<int> usedIndices;
+
+        for (const auto& cand : candidates) {
+            bool tooClose = false;
+            for (int used : usedIndices) {
+                if (std::abs(cand.frameIndex - used) < FRAME_GAP) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (!tooClose) {
+                selected.push_back(cand);
+                usedIndices.insert(cand.frameIndex);
+                if (selected.size() >= TOP_K) break;
+            }
         }
-        topFramesPerLabel[label] = candidates;
+
+        topFramesPerLabel[label] = selected;
+
     }
 
     //std::cout << "\n--- 各ラベルのサムネイル候補（上位 " << TOP_K << " 件） ---\n";
@@ -348,11 +368,32 @@ int main() {
         }
 
         // 高周波スコアで降順ソート
+        // --- 間隔付き選定ロジックここから ---
+        const int FRAME_GAP = 15;  // フレーム間の最小間隔
+
+        std::vector<std::pair<int, double>> selected;
+        std::set<int> usedIndicesForHF;
+
         std::sort(scoredFrames.begin(), scoredFrames.end(),
             [](const auto& a, const auto& b) { return a.second > b.second; });
 
-        if (scoredFrames.size() > TOP_K) scoredFrames.resize(TOP_K);
-        highFreqTopFramesPerLabel[label] = scoredFrames;
+        for (const auto& [frameIndex, energy] : scoredFrames) {
+            bool tooClose = false;
+            for (int used : usedIndicesForHF) {
+                if (std::abs(frameIndex - used) < FRAME_GAP) {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (!tooClose) {
+                selected.emplace_back(frameIndex, energy);
+                usedIndicesForHF.insert(frameIndex);
+                if (selected.size() >= TOP_K) break;
+            }
+        }
+
+        highFreqTopFramesPerLabel[label] = selected;
     }
 
     // --- 出力確認 ---
@@ -392,7 +433,7 @@ int main() {
             if (count >= TOP_K) break;
         }
 
-        std::string outPath = "outputs/thumbnail_grid_label" + std::to_string(label) + "_HF.png";
+        std::string outPath = "outputs/ HF_thumbnail_grid_label" + std::to_string(label) + ".png";
         cv::imwrite(outPath, canvas);
         std::cout << "保存完了（高周波）: " << outPath << std::endl;
     }
