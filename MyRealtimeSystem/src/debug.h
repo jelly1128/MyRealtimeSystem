@@ -10,3 +10,6 @@ const std::string DEBUG_SMOOTHED_CSV = "outputs/debug/20211021093634_000001-001_
 std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string& csvPath);
 std::vector<std::vector<int>> loadFrameBinariesFromCSV(const std::string& csvPath);
 std::vector<int> loadWindowedSceneLabelsFromCSV(const std::string& csvPath);
+
+// \’z’†‚ÌƒAƒ‹ƒSƒŠƒYƒ€
+//bool selectThumbnailsFromLabels();
