@@ -102,3 +102,15 @@ std::vector<int> loadWindowedSceneLabelsFromCSV(const std::string& csvPath) {
     }
 	return labels;
 }
+
+
+void saveLogToFile(const std::string& filePath, const std::stringstream& logStream) {
+    std::ofstream ofs(filePath, std::ios::out);
+    if (!ofs) {
+        std::cerr << "ログファイルの書き込みに失敗しました: " << filePath << std::endl;
+        return;
+    }
+    ofs << logStream.str();
+    ofs.close();
+    std::cout << "ログファイルを保存しました: " << filePath << std::endl;
+}

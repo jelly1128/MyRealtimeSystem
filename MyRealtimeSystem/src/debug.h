@@ -11,5 +11,10 @@ std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string&
 std::vector<std::vector<int>> loadFrameBinariesFromCSV(const std::string& csvPath);
 std::vector<int> loadWindowedSceneLabelsFromCSV(const std::string& csvPath);
 
+
+// log
+void saveLogToFile(const std::string& filePath, const std::stringstream& logStream);
+
+
 // \’z’†‚ÌƒAƒ‹ƒSƒŠƒYƒ€
 //bool selectThumbnailsFromLabels();

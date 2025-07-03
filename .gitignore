@@ -63,3 +63,4 @@ publish/
 # 出力CSV
 *.csv
 *.svg
+*.txt
