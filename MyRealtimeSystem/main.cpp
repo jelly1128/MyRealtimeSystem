@@ -26,11 +26,11 @@ int main() {
 
     //// 1. 初期化 
     // モデルの読み込み
-    /*torch::jit::script::Module model;
+    torch::jit::script::Module model;
     if (!loadModel(TREATMENT_MODEL_PATH, model)) {
         std::cerr << "モデルの読み込みに失敗しました。" << std::endl;
         return -1;
-    }*/
+    }
 
     //// 2. フレーム読み込み (動画or画像)
 	// 動画からフレームを読み込む
@@ -42,75 +42,85 @@ int main() {
     }*/
 
 	// 画像フォルダから読み込む
-	/*std::vector<cv::Mat> frames;
+	std::vector<cv::Mat> frames;
 	if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
 		std::cerr << "フレームの読み込みに失敗しました" << std::endl;
 	} else {
 		std::cout << "フレームの読み込みに成功しました。" << std::endl;
 		int numFrames = frames.size();
 		std::cout << "読み込んだフレーム数: " << numFrames << std::endl;
-	}*/
+	}
 
     //// 3. 推論
 	// 推論の実行
-    /*std::vector<std::vector<float>> frameProbabilities;
+    std::vector<std::vector<float>> frameProbabilities;
     for (const cv::Mat& frame : frames) {
         frameProbabilities.push_back(predictFrame(frame, model, INPUT_WIDTH, INPUT_HEIGHT));
-    }*/
+    }
 
     //// 4. 処理系
 	// 推論結果のバイナリ化
-    //std::vector<std::vector<int>> frameBinaryLabels = binarizeProbabilities(frameProbabilities, 0.5);
+    std::vector<std::vector<int>> frameBinaryLabels = binarizeProbabilities(frameProbabilities, 0.5);
 
     // シーンラベルの抽出
-    //std::vector<std::vector<int>> sceneClassLabels;
-    //for (const std::vector<int>& vec : frameBinaryLabels) {
-    //    sceneClassLabels.emplace_back(vec.begin(), vec.begin() + NUM_SCENE_CLASSES);  // 0〜5の主クラスのみ
-    //}
+    std::vector<std::vector<int>> sceneClassLabels;
+    for (const std::vector<int>& vec : frameBinaryLabels) {
+        sceneClassLabels.emplace_back(vec.begin(), vec.begin() + NUM_SCENE_CLASSES);  // 0〜5の主クラスのみ
+    }
 
 	// スライディングウィンドウを使用してラベルを1つにまとめる
-    //std::vector<int> windowedSceneLabels = slidingWindowToSingleLabel(sceneClassLabels, SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
+    std::vector<int> windowedSceneLabels = slidingWindowToSingleLabel(sceneClassLabels, SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
 
     //// 5. 出力 
     // 結果の保存 
-    /*if (!saveMatrixToCSV(OUTPUT_PROBS_CSV, frameProbabilities, "prob_")) {
+    if (!saveMatrixToCSV(OUTPUT_PROBS_CSV, frameProbabilities, "prob_")) {
         std::cerr << "確率CSVの保存に失敗しました。" << std::endl;
     }
     else {
         std::cout << "推論確率を " << OUTPUT_PROBS_CSV << " に保存しました。" << std::endl;
-    }*/
+    }
 
-    /*if (!saveMatrixToCSV(OUTPUT_LABELS_CSV, frameBinaryLabels, "label_")) {
+    if (!saveMatrixToCSV(OUTPUT_LABELS_CSV, frameBinaryLabels, "label_")) {
         std::cerr << "ラベルCSVの保存に失敗しました。" << std::endl;
     }
     else {
         std::cout << "ハードラベルを " << OUTPUT_LABELS_CSV << " に保存しました。" << std::endl;
-    }*/
+    }
 
-    /*if (!saveLabelsToCSV(OUTPUT_SMOOTHED_CSV, windowedSceneLabels)) {
+    if (!saveLabelsToCSV(OUTPUT_SMOOTHED_CSV, windowedSceneLabels)) {
         std::cerr << "スムーズラベルCSVの保存に失敗しました。" << std::endl;
     }
     else {
         std::cout << "スムーズラベルを " << OUTPUT_SMOOTHED_CSV << " に保存しました。" << std::endl;
-	}*/
+	}
 
     // タイムライン画像出力
-    /*if (!drawTimelineImage(windowedSceneLabels, TIMELINE_IMAGE_PATH, NUM_SCENE_CLASSES)) {
+    if (!drawTimelineImage(windowedSceneLabels, TIMELINE_IMAGE_PATH, NUM_SCENE_CLASSES)) {
         std::cerr << "タイムライン画像の出力に失敗しました。" << std::endl;
     }
     else {
         std::cout << "タイムライン画像を " << TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
-    }*/
+    }
 
     // for debug
-    std::vector<std::vector<float>> frameProbabilities;
+    /*std::vector<std::vector<float>> frameProbabilities;
     frameProbabilities = loadFrameProbabilitiesFromCSV(DEBUG_PROBS_CSV);
 
     std::vector<std::vector<int>> frameBinaryLabels;
 	frameBinaryLabels = loadFrameBinariesFromCSV(DEBUG_LABELS_CSV);
 
     std::vector<int> windowedSceneLabels;
-	windowedSceneLabels = loadWindowedSceneLabelsFromCSV(DEBUG_SMOOTHED_CSV);
+	windowedSceneLabels = loadWindowedSceneLabelsFromCSV(DEBUG_SMOOTHED_CSV);*/
+
+    // 推論結果の読み込みからの場合
+    /*std::vector<std::vector<float>> frameProbabilities;
+    frameProbabilities = loadFrameProbabilitiesFromCSV(OUTPUT_PROBS_CSV);
+
+    std::vector<std::vector<int>> frameBinaryLabels;
+    frameBinaryLabels = loadFrameBinariesFromCSV(OUTPUT_LABELS_CSV);
+
+    std::vector<int> windowedSceneLabels;
+    windowedSceneLabels = loadWindowedSceneLabelsFromCSV(OUTPUT_SMOOTHED_CSV);*/
 
 	// タイムライン画像の出力
     /*if (!drawTimelineImage(windowedSceneLabels, TIMELINE_IMAGE_PATH, NUM_SCENE_CLASSES)) {
@@ -337,7 +347,7 @@ int main() {
             count++;
             if (count >= TOP_K) break;
         }
-        std::string outPath = "outputs/thumbnail_grid_label" + std::to_string(label) + ".png";
+        std::string outPath = THUMBNAIL_PATH + "_thumbnail_grid_label" + std::to_string(label) + ".png";
         cv::imwrite(outPath, canvas);
         std::cout << "保存完了: " << outPath << std::endl;
     }
@@ -433,7 +443,7 @@ int main() {
             if (count >= TOP_K) break;
         }
 
-        std::string outPath = "outputs/ HF_thumbnail_grid_label" + std::to_string(label) + ".png";
+        std::string outPath = THUMBNAIL_PATH + "_HF_thumbnail_grid_label" + std::to_string(label) + ".png";
         cv::imwrite(outPath, canvas);
         std::cout << "保存完了（高周波）: " << outPath << std::endl;
     }
@@ -461,7 +471,7 @@ int main() {
         }
     }
 
-    saveLogToFile("outputs/thumbnail_selection_log.txt", logStream);
+    saveLogToFile(LOG_FILE_PATH, logStream);
 
 
     return 0;
