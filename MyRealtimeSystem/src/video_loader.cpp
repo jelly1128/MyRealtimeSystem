@@ -2,6 +2,8 @@
 #include <opencv2/opencv.hpp>
 #include <regex>
 
+
+// 動画からフレームを読み込む関数
 bool loadFramesFromVideo(const std::string& videoPath, std::vector<cv::Mat>& frames, int frameInterval) {
     cv::VideoCapture cap(videoPath);
     if (!cap.isOpened()) {
@@ -33,6 +35,8 @@ int extractFrameNumber(const std::string& filename) {
     return -1;  // 見つからなかった場合（先頭に来ないように）
 }
 
+
+// フォルダからフレームを読み込む関数
 bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>& frames) {
     frames.clear();
     std::vector<cv::String> filepaths;
@@ -59,24 +63,12 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
 }
 
 
-//bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>& frames) {
-//    frames.clear();
-//    std::vector<cv::String> filepaths;
-//
-//    // ワイルドカードで画像拡張子を指定（複数使うなら繰り返す）
-//    cv::glob(folderPath + "/*.png", filepaths, false);  // PNG
-//
-//    if (filepaths.empty()) return false;
-//
-//    // ソート（ファイル名順）
-//    std::sort(filepaths.begin(), filepaths.end());
-//
-//    for (const auto& path : filepaths) {
-//        cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
-//        if (!img.empty()) {
-//            frames.push_back(img);
-//        }
-//    }
-//
-//    return !frames.empty();
-//}
+// 読み込んだ画像を表示する(デバック用)
+void showFrames(const std::vector<cv::Mat>& frames) {
+    for (size_t i = 0; i < frames.size(); ++i) {
+        cv::imshow("Frame", frames[i]);
+        int key = cv::waitKey(500); // 500msごとに次の画像へ
+        if (key == 27) break; // ESCキーで中断
+    }
+    cv::destroyAllWindows();
+}

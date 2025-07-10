@@ -1,8 +1,15 @@
 #include "debug.h"
 #include <vector>
+#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <iostream>
+#include <iomanip>
+#include <mutex>
+
+namespace {
+    std::ofstream g_logFile;
+    std::mutex g_logMutex;
+}
 
 // CSVファイルからフレームの確率を読み込む関数
 //使い方
@@ -104,13 +111,31 @@ std::vector<int> loadWindowedSceneLabelsFromCSV(const std::string& csvPath) {
 }
 
 
-void saveLogToFile(const std::string& filePath, const std::stringstream& logStream) {
-    std::ofstream ofs(filePath, std::ios::out);
-    if (!ofs) {
-        std::cerr << "ログファイルの書き込みに失敗しました: " << filePath << std::endl;
-        return;
+// ログ初期化
+void initLog(const std::string& filename) {
+    std::lock_guard<std::mutex> lock(g_logMutex);
+    g_logFile.open(filename, std::ios::app);
+    if (!g_logFile.is_open()) {
+        std::cerr << "ログファイルを開けません: " << filename << std::endl;
     }
-    ofs << logStream.str();
-    ofs.close();
-    std::cout << "ログファイルを保存しました: " << filePath << std::endl;
+}
+
+
+// ログ出力
+void log(const std::string& message, bool toConsole) {
+    std::lock_guard<std::mutex> lock(g_logMutex);
+    if (g_logFile.is_open()) {
+        g_logFile << message << std::endl;
+    }
+    if (toConsole) {
+        std::cout << message << std::endl;
+    }
+}
+
+// ログクローズ
+void closeLog() {
+    std::lock_guard<std::mutex> lock(g_logMutex);
+    if (g_logFile.is_open()) {
+        g_logFile.close();
+    }
 }

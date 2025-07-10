@@ -8,3 +8,6 @@ bool loadFramesFromVideo(const std::string& videoPath, std::vector<cv::Mat>& fra
 
 // フォルダから連番画像を読み込む（例：frame_000.png, ...）
 bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>& frames);
+
+// 読み込んだ画像を表示する(デバック用)
+void showFrames(const std::vector<cv::Mat>& frames);

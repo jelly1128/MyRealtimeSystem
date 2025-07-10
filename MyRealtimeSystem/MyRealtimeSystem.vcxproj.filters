@@ -21,9 +21,6 @@
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="config.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\predictor.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -46,6 +43,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\thumbnail.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="config\config.h">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

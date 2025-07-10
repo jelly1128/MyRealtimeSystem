@@ -50,27 +50,22 @@ std::vector<float> predictFrame(const cv::Mat& frame, torch::jit::script::Module
         rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
     inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
 
-    // --- (4) 標準化（ImageNet用）---
-    //inputTensor[0][0] = inputTensor[0][0].sub_(0.485).div_(0.229);
-    //inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
-    //inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
-
 	// デバッグ用に画像を保存
-  //  if (!saved) {
-		//cv::imwrite("debug_frame.png", frame);
-		////cv::imwrite("debug_masked.png", masked);
-		//cv::imwrite("debug_rgb.png", rgb);
-  //      //cv::imwrite("debug_cropped.png", cropped);
-  //      cv::imwrite("debug_resized.png", resized);
-  //      saved = true;
-  //  }
+    /*if (!saved) {
+		cv::imwrite("debug_frame.png", frame);
+		//cv::imwrite("debug_masked.png", masked);
+		cv::imwrite("debug_rgb.png", rgb);
+        //cv::imwrite("debug_cropped.png", cropped);
+        cv::imwrite("debug_resized.png", resized);
+        saved = true;
+    }*/
 
     inputTensor = inputTensor.to(torch::kCUDA);
 
     // --- (5) 推論 ---
-    torch::NoGradGuard no_grad;
-    auto output = model.forward({ inputTensor }).toTensor();
-    auto probs = torch::sigmoid(output).squeeze().to(torch::kCPU);
+	torch::NoGradGuard no_grad;                                    // 勾配計算を無効化
+	auto output = model.forward({ inputTensor }).toTensor();       // モデルに入力を渡す
+	auto probs = torch::sigmoid(output).squeeze().to(torch::kCPU); // シグモイド関数を適用し、CPUに戻す
 
     std::vector<float> result(probs.data_ptr<float>(), probs.data_ptr<float>() + probs.numel());
     return result;
