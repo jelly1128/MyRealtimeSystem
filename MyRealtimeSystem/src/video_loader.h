@@ -4,6 +4,18 @@
 #include <vector>
 #include <string>
 
+
+/*
+* @file video_loader.h
+* @brief 動画や画像フォルダからフレームを読み込み、前処理を行う関数群
+* @details
+* このヘッダーファイルには、動画ファイルからフレームを取得する関数や、
+* フォルダから連番画像を読み込む関数、フレームの前処理を行う関数が含まれています。
+* 前処理では、クロップやマスクの適用、リサイズ、カラーチャンネル変換などを行い、
+* 最終的にPyTorchのTensor形式に変換します。
+*/
+
+
 // 動画ファイルからフレームを取得する関数
 bool loadFramesFromVideo(const std::string& videoPath, std::vector<cv::Mat>& frames, int frameInterval);
 

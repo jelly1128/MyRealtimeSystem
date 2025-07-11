@@ -48,10 +48,10 @@ int main() {
 		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
 	}*/
 	// 画像前処理
-	/*std::vector<torch::Tensor> processedFrames;
+	/*std::vector<torch::Tensor> frameTensors;
 	for (cv::Mat& frame : frames) {
-		torch::Tensor processedFrame = preprocessFrame(frame, INPUT_WIDTH, INPUT_HEIGHT, CROP_BOX, cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE));
-		processedFrames.push_back(processedFrame);
+		torch::Tensor frameTensor = preprocessFrame(frame, INPUT_WIDTH, INPUT_HEIGHT, CROP_BOX, cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE));
+		frameTensors.push_back(frameTensor);
 	}*/
 
 	// 画像フォルダから読み込む
@@ -66,18 +66,18 @@ int main() {
 	}
 
 	// 画像前処理
-	std::vector<torch::Tensor> processedFrames;
+	std::vector<torch::Tensor> frameTensors;
 	for (cv::Mat& frame : frames) {
-		torch::Tensor processedFrame = preprocessFrame(frame, INPUT_WIDTH, INPUT_HEIGHT);
-		processedFrames.push_back(processedFrame);
+		torch::Tensor frameTensor = preprocessFrame(frame, INPUT_WIDTH, INPUT_HEIGHT);
+		frameTensors.push_back(frameTensor);
 	}
 
 	// 3. 推論
 	// 処置検出の推論の実行
-    /*std::vector<std::vector<float>> treatmentProbabilities;
-    for (const cv::Mat& frame : frames) {
-		treatmentProbabilities.push_back(predictFrame(frame, treatment_model, INPUT_WIDTH, INPUT_HEIGHT));
-    }*/
+    std::vector<std::vector<float>> treatmentProbabilities;
+    for (const torch::Tensor& frameTensor : frameTensors) {
+		treatmentProbabilities.push_back(runTreatmentInference(frameTensor, treatment_model));
+	}
 
 	// 臓器分類の推論の実行（まだ実装できてない）
 	/*std::vector<std::vector<float>> organProbabilities;
@@ -86,13 +86,13 @@ int main() {
 	}*/
 
 	// 推論結果の保存
-	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
+	if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
 		log("確率CSVの保存に失敗しました。", true);
 		closeLog();
 		return -1;
 	} else {
 		log("推論確率を " + TREATMENT_OUTPUT_PROBS_CSV + " に保存しました。", true);
-	}*/
+	}
 
 	/*if (!saveMatrixToCSV(ORGAN_OUTPUT_PROBS_CSV, organProbabilities, "prob_")) {
 		log("臓器分類の確率CSVの保存に失敗しました。", true);

@@ -73,8 +73,6 @@ torch::Tensor preprocessFrame(
 ) {
     frame.clone();
 
-	std::cout << "Original frame size: " << frame.size() << std::endl;
-
     // --- (1) マスク適用 ---
     cv::Mat masked;
     if (!mask.empty() && mask.size() == frame.size()) {
@@ -98,8 +96,6 @@ torch::Tensor preprocessFrame(
     cv::Mat resized;
     cv::resize(cropped, resized, cv::Size(inputWidth, inputHeight));
 	resized = resized.clone();  // リサイズ後の画像を確保
-
-	std::cout << "Resized image size: " << resized.size() << std::endl;
 
 	// --- (4) カラーチャンネル変換 ---
     cv::Mat rgb;
@@ -127,7 +123,7 @@ torch::Tensor preprocessFrame(
         rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
     inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
 
-    inputTensor.to(torch::kCUDA);  // CUDA対応
+    inputTensor = inputTensor.to(torch::kCUDA);
 
     return inputTensor;
 }
