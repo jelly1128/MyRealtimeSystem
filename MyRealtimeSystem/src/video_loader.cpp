@@ -1,5 +1,6 @@
 #include "video_loader.h"
 #include <opencv2/opencv.hpp>
+#include <torch/torch.h>
 #include <regex>
 
 
@@ -60,6 +61,75 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
     }
 
     return !frames.empty();
+}
+
+
+// 画像前処理
+torch::Tensor preprocessFrame(
+    const cv::Mat& frame,
+    int inputWidth, int inputHeight, // リサイズ後のサイズ
+    const cv::Rect& cropBox,         // クロップ領域（未指定なら全体)
+    const cv::Mat& mask              // マスク画像（空なら未使用）
+) {
+    frame.clone();
+
+	std::cout << "Original frame size: " << frame.size() << std::endl;
+
+    // --- (1) マスク適用 ---
+    cv::Mat masked;
+    if (!mask.empty() && mask.size() == frame.size()) {
+        cv::bitwise_and(frame, frame, masked, mask);
+    } else {
+        masked = frame.clone();
+    }
+
+	// --- (2) クロップ ---
+    cv::Mat cropped;
+    if (cropBox.width > 0 && cropBox.height > 0 &&
+        cropBox.x >= 0 && cropBox.y >= 0 &&
+        cropBox.x + cropBox.width <= masked.cols &&
+        cropBox.y + cropBox.height <= masked.rows) {
+        cropped = masked(cropBox).clone();
+	} else {
+        cropped = masked.clone();  // クロップしない場合は全体
+    }
+
+	// --- (3) リサイズ ---
+    cv::Mat resized;
+    cv::resize(cropped, resized, cv::Size(inputWidth, inputHeight));
+	resized = resized.clone();  // リサイズ後の画像を確保
+
+	std::cout << "Resized image size: " << resized.size() << std::endl;
+
+	// --- (4) カラーチャンネル変換 ---
+    cv::Mat rgb;
+    cv::cvtColor(resized, rgb, cv::COLOR_BGR2RGB);
+    rgb.convertTo(rgb, CV_32F, 1.0 / 255.0);
+	rgb = rgb.clone();  // 連続化のためにclone
+
+    // === デバッグ表示 ===
+    //{
+    //    cv::Mat debugImg, debugShow;
+    //    rgb.convertTo(debugImg, CV_8U, 255.0); // float → uchar
+    //    cv::cvtColor(debugImg, debugShow, cv::COLOR_RGB2BGR); // RGB→BGRに戻す
+    //    if (!debugShow.empty()) {
+    //        cv::imshow("Debug RGB", debugShow);
+    //        int key = cv::waitKey(0);
+    //    }
+    //    else {
+    //        std::cerr << "debugShow is empty! Cannot show window." << std::endl;
+    //    }
+    //}
+    // ==================
+
+	// --- (5) Tensor変換 ---
+    torch::Tensor inputTensor = torch::from_blob(
+        rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
+    inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
+
+    inputTensor.to(torch::kCUDA);  // CUDA対応
+
+    return inputTensor;
 }
 
 

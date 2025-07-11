@@ -14,7 +14,6 @@ bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) 
     }
 }
 
-static bool saved = false;  // デバッグ用フラグ
 
 std::vector<float> predictFrame(const cv::Mat& frame, torch::jit::script::Module& model, int inputWidth, int inputHeight) {
     // --- (0) マスク適用（前処理） ---

@@ -24,6 +24,18 @@ int main() {
         return -1;
     }
 
+	// マスク画像の表示
+	//cv::Mat mask = cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE);
+	//if (mask.empty()) {
+	//	log("マスク画像の読み込みに失敗しました。", true);
+	//	closeLog();
+	//	return -1;
+	//} else {
+	//	log("マスク画像の読み込みに成功しました。", true);
+	//	cv::imshow("Mask Image", mask);
+	//	cv::waitKey(0);  // マスク画像を表示
+	//}
+
 	// 2. フレーム読み込み (動画or画像)
 	// 動画からフレームを読み込む
     /*std::vector<cv::Mat> frames;
@@ -31,8 +43,16 @@ int main() {
 		log("動画のフレームの読み込みに失敗しました。", true);
 		closeLog();
         return -1;
-
-    }*/
+	} else {
+		log("動画のフレームの読み込みに成功しました。", true);
+		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
+	}*/
+	// 画像前処理
+	/*std::vector<torch::Tensor> processedFrames;
+	for (cv::Mat& frame : frames) {
+		torch::Tensor processedFrame = preprocessFrame(frame, INPUT_WIDTH, INPUT_HEIGHT, CROP_BOX, cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE));
+		processedFrames.push_back(processedFrame);
+	}*/
 
 	// 画像フォルダから読み込む
 	std::vector<cv::Mat> frames;
@@ -45,12 +65,19 @@ int main() {
 		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
 	}
 
+	// 画像前処理
+	std::vector<torch::Tensor> processedFrames;
+	for (cv::Mat& frame : frames) {
+		torch::Tensor processedFrame = preprocessFrame(frame, INPUT_WIDTH, INPUT_HEIGHT);
+		processedFrames.push_back(processedFrame);
+	}
+
 	// 3. 推論
 	// 処置検出の推論の実行
-    std::vector<std::vector<float>> treatmentProbabilities;
+    /*std::vector<std::vector<float>> treatmentProbabilities;
     for (const cv::Mat& frame : frames) {
 		treatmentProbabilities.push_back(predictFrame(frame, treatment_model, INPUT_WIDTH, INPUT_HEIGHT));
-    }
+    }*/
 
 	// 臓器分類の推論の実行（まだ実装できてない）
 	/*std::vector<std::vector<float>> organProbabilities;
@@ -59,13 +86,13 @@ int main() {
 	}*/
 
 	// 推論結果の保存
-	if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
+	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
 		log("確率CSVの保存に失敗しました。", true);
 		closeLog();
 		return -1;
 	} else {
 		log("推論確率を " + TREATMENT_OUTPUT_PROBS_CSV + " に保存しました。", true);
-	}
+	}*/
 
 	/*if (!saveMatrixToCSV(ORGAN_OUTPUT_PROBS_CSV, organProbabilities, "prob_")) {
 		log("臓器分類の確率CSVの保存に失敗しました。", true);

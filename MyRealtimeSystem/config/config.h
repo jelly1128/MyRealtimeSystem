@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <string>
 #include <vector>
+#include <opencv2/opencv.hpp>
 
 // モデルのパス
 const std::string TREATMENT_MODEL_PATH = "models/treatment_model_fold_0_best.pt";
@@ -28,7 +29,9 @@ const std::string ORGAN_TIMELINE_IMAGE_PATH = std::string("outputs/") + VIDEO_NA
 // 画像取得間隔（フレーム数）
 constexpr int FRAME_INTERVAL = 10;
 
-// 推論用画像サイズ
+// 推論用画像のパラメータ
+const std::string MASK_IMAGE_PATH = "images/fujifilm_mask.png"; // マスク画像のパス
+const cv::Rect CROP_BOX(330, 25, 1260, 970); // クロップボックス（x, y, width, height）
 constexpr int INPUT_WIDTH = 224;
 constexpr int INPUT_HEIGHT = 224;
 
