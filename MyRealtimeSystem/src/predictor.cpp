@@ -15,6 +15,7 @@ bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) 
     }
 }
 
+
 // 処置検出モデルの推論を実行する関数
 std::vector<float> runTreatmentInference(
     const torch::Tensor& frameTensor,
@@ -28,3 +29,7 @@ std::vector<float> runTreatmentInference(
     std::vector<float> result(probs.data_ptr<float>(), probs.data_ptr<float>() + probs.numel());
     return result;
 }
+
+
+// 臓器分類モデルの推論を実行する関数
+int predictOrganClass(const torch::Tensor& frameTensor, torch::jit::script::Module& organModel);

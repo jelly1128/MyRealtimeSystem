@@ -13,6 +13,9 @@ int main() {
 	// ログの初期化
 	initLog(DEBUG_LOG_FILE_PATH);
 	log("プログラム開始", true);
+	TimeLogger timerAll("全体処理時間");
+
+	TimeLogger timerLoad("モデル読み込み");
 
 	// 1. 初期化
     // モデルの読み込み
@@ -24,17 +27,7 @@ int main() {
         return -1;
     }
 
-	// マスク画像の表示
-	//cv::Mat mask = cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE);
-	//if (mask.empty()) {
-	//	log("マスク画像の読み込みに失敗しました。", true);
-	//	closeLog();
-	//	return -1;
-	//} else {
-	//	log("マスク画像の読み込みに成功しました。", true);
-	//	cv::imshow("Mask Image", mask);
-	//	cv::waitKey(0);  // マスク画像を表示
-	//}
+	timerLoad.stop();
 
 	// 2. フレーム読み込み (動画or画像)
 	// 動画からフレームを読み込む
@@ -54,6 +47,8 @@ int main() {
 		frameTensors.push_back(frameTensor);
 	}*/
 
+	TimeLogger timerRead("フレーム読み込み");
+
 	// 画像フォルダから読み込む
 	std::vector<cv::Mat> frames;
 	if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
@@ -65,6 +60,10 @@ int main() {
 		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
 	}
 
+	timerRead.stop();
+
+	TimeLogger timerPreprocess("フレーム前処理");
+
 	// 画像前処理
 	std::vector<torch::Tensor> frameTensors;
 	for (cv::Mat& frame : frames) {
@@ -72,12 +71,14 @@ int main() {
 		frameTensors.push_back(frameTensor);
 	}
 
+	timerPreprocess.stop();
+
 	// 3. 推論
 	// 処置検出の推論の実行
-    std::vector<std::vector<float>> treatmentProbabilities;
+    /*std::vector<std::vector<float>> treatmentProbabilities;
     for (const torch::Tensor& frameTensor : frameTensors) {
 		treatmentProbabilities.push_back(runTreatmentInference(frameTensor, treatment_model));
-	}
+	}*/
 
 	// 臓器分類の推論の実行（まだ実装できてない）
 	/*std::vector<std::vector<float>> organProbabilities;
@@ -86,13 +87,13 @@ int main() {
 	}*/
 
 	// 推論結果の保存
-	if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
+	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
 		log("確率CSVの保存に失敗しました。", true);
 		closeLog();
 		return -1;
 	} else {
 		log("推論確率を " + TREATMENT_OUTPUT_PROBS_CSV + " に保存しました。", true);
-	}
+	}*/
 
 	/*if (!saveMatrixToCSV(ORGAN_OUTPUT_PROBS_CSV, organProbabilities, "prob_")) {
 		log("臓器分類の確率CSVの保存に失敗しました。", true);
@@ -113,7 +114,7 @@ int main() {
     //for (const std::vector<int>& vec : frameBinaryLabels) {
     //    sceneClassLabels.emplace_back(vec.begin(), vec.begin() + NUM_SCENE_CLASSES);  // 0〜5の主クラスのみ
     //}
-
+	timerAll.stop();
 	closeLog();
     return 0;
 }

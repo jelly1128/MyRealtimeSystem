@@ -139,3 +139,23 @@ void closeLog() {
         g_logFile.close();
     }
 }
+
+// タイムロガーのコンストラクタ
+TimeLogger::TimeLogger(const std::string& blockName, bool toConsole)
+    : blockName_(blockName), toConsole_(toConsole)
+{
+    start_ = std::chrono::high_resolution_clock::now();
+}
+
+void TimeLogger::stop() {
+    auto end = std::chrono::high_resolution_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start_).count();
+    double sec = ms / 1000.0; // 秒に変換
+
+    std::ostringstream oss;
+    oss << "[" << blockName_ << "] 実行時間: "
+        << ms << " ms ("
+        << std::fixed << std::setprecision(3) << sec << " s)";
+
+    log(oss.str(), toConsole_);
+}

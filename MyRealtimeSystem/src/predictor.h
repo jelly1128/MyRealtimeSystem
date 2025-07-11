@@ -1,23 +1,44 @@
-#pragma once
+ï»¿#pragma once
 #include <opencv2/opencv.hpp>
 #include <torch/script.h>
 #include <vector>
 
 /**
- * @brief PyTorchƒ‚ƒfƒ‹‚ğ“Ç‚İ‚Ş
- * @param[in] modelPath ƒ‚ƒfƒ‹ƒtƒ@ƒCƒ‹‚ÌƒpƒX
- * @param[out] model “Ç‚İ‚ñ‚¾ƒ‚ƒfƒ‹
- * @retval true “Ç‚İ‚İ¬Œ÷
- * @retval false “Ç‚İ‚İ¸”s
+ * @brief PyTorchãƒ¢ãƒ‡ãƒ«ã‚’èª­ã¿è¾¼ã‚€
+ * @param[in] modelPath ãƒ¢ãƒ‡ãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹
+ * 
+ * @retval true èª­ã¿è¾¼ã¿æˆåŠŸ
+ * @retval false èª­ã¿è¾¼ã¿å¤±æ•—
  */
- // ƒ‚ƒfƒ‹‚ğ“Ç‚İ‚ŞŠÖ”
-bool loadModel(const std::string& modelPath, torch::jit::script::Module& model);
+ // ãƒ¢ãƒ‡ãƒ«ã‚’èª­ã¿è¾¼ã‚€é–¢æ•°
+bool loadModel(
+    const std::string& modelPath,
+    torch::jit::script::Module& model
+);
+
+
+/** 
+ * @brief 1ãƒ•ãƒ¬ãƒ¼ãƒ ã®ãƒ†ãƒ³ã‚½ãƒ«ã§ãƒ¢ãƒ‡ãƒ«æ¨è«–ã‚’å®Ÿè¡Œã—ã€ç¢ºç‡ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+ * @param[in] frameTensor å‰å‡¦ç†æ¸ˆã¿ã®ç”»åƒãƒ†ãƒ³ã‚½ãƒ« (1,3,H,W)
+ * @param[in] model æ¨è«–ç”¨PyTorchãƒ¢ãƒ‡ãƒ«
+ * @return å„ã‚¯ãƒ©ã‚¹ã®ç¢ºç‡ï¼ˆfloatå‹ãƒ™ã‚¯ãƒˆãƒ«ï¼‰
+ */
+ // å‡¦ç½®æ¤œå‡ºãƒ¢ãƒ‡ãƒ«ã®æ¨è«–ã‚’å®Ÿè¡Œã™ã‚‹é–¢æ•°
+std::vector<float> runTreatmentInference(
+    const torch::Tensor& frameTensor, 
+    torch::jit::script::Module& treatmentModel
+);
 
 /**
- * @brief 1ƒtƒŒ[ƒ€‚Ìƒeƒ“ƒ\ƒ‹‚Åƒ‚ƒfƒ‹„˜_‚ğÀs‚µAŠm—¦ƒxƒNƒgƒ‹‚ğ•Ô‚·
- * @param[in] frameTensor ‘Oˆ—Ï‚İ‚Ì‰æ‘œƒeƒ“ƒ\ƒ‹ (1,3,H,W)
- * @param[in] model „˜_—pPyTorchƒ‚ƒfƒ‹
- * @return ŠeƒNƒ‰ƒX‚ÌŠm—¦ifloatŒ^ƒxƒNƒgƒ‹j
+ * @brief è‡“å™¨åˆ†é¡LSTMãƒ¢ãƒ‡ãƒ«ã§æ¨è«–ã—ã€ç¢ºç‡ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+ * @param[in] frameTensor å‰å‡¦ç†æ¸ˆã¿ã®ç”»åƒãƒ†ãƒ³ã‚½ãƒ« (1,3,H,W)
+ * @param[in] model è‡“å™¨åˆ†é¡PyTorchãƒ¢ãƒ‡ãƒ«
+ * @param[in,out] h_0 LSTMã®éš ã‚ŒçŠ¶æ…‹
+ * @param[in,out] c_0 LSTMã®ã‚»ãƒ«çŠ¶æ…‹
+ * @return å„ã‚¯ãƒ©ã‚¹ã®ç¢ºç‡ï¼ˆfloatå‹ãƒ™ã‚¯ãƒˆãƒ«ï¼‰
  */
-// „˜_‚ğÀs‚·‚éŠÖ”
-std::vector<float> runTreatmentInference(const torch::Tensor& frameTensor, torch::jit::script::Module& treatmentModel);
+std::vector<float> runOrganInference(
+    const torch::Tensor& frameTensor,
+    torch::jit::script::Module& model,
+    torch::Tensor& h_0, torch::Tensor& c_0
+);

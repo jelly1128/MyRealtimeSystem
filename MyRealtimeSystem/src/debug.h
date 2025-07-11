@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <chrono>
 
 const std::string DEBUG_PROBS_CSV = "outputs/debug/20211021093634_000001-001_probs.csv";
 const std::string DEBUG_LABELS_CSV = "outputs/debug/20211021093634_000001-001_labels.csv";
@@ -19,6 +20,13 @@ void initLog(const std::string& filename);
 void log(const std::string& message, bool toConsole = true);
 void closeLog();
 
-
-// 構築中のアルゴリズム
-//bool selectThumbnailsFromLabels();
+// 実行時間計測タイムロガークラス
+class TimeLogger {
+public:
+    TimeLogger(const std::string& blockName, bool toConsole = true);
+    void stop();
+private:
+    std::string blockName_;
+    bool toConsole_;
+    std::chrono::high_resolution_clock::time_point start_;
+};
