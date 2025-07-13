@@ -24,8 +24,15 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
 
 // フレームを前処理する関数
 // クロップ・マスクはオプションで指定可能
-torch::Tensor preprocessFrame(
+torch::Tensor preprocessFrameForTreatment(
 	const cv::Mat& frame, 
+	int inputWidth, int inputHeight,      // 入力サイズ
+	const cv::Rect& cropBox = cv::Rect(), // クロップボックス（デフォルトは全体）
+	const cv::Mat& mask = cv::Mat()       // マスク画像（デフォルトはなし）
+);
+
+torch::Tensor preprocessFrameForOrgan(
+	const cv::Mat& frame,
 	int inputWidth, int inputHeight,      // 入力サイズ
 	const cv::Rect& cropBox = cv::Rect(), // クロップボックス（デフォルトは全体）
 	const cv::Mat& mask = cv::Mat()       // マスク画像（デフォルトはなし）

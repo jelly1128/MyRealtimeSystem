@@ -32,4 +32,24 @@ std::vector<float> runTreatmentInference(
 
 
 // 臓器分類モデルの推論を実行する関数
-int predictOrganClass(const torch::Tensor& frameTensor, torch::jit::script::Module& organModel);
+int runOrganInference(
+    const torch::Tensor& frameTensor, 
+    torch::jit::script::Module& organModel,
+    torch::Tensor& h_0, torch::Tensor& c_0
+) {
+    torch::NoGradGuard no_grad;
+
+    // [1, 3, H, W] → [1, 1, 3, H, W]
+    torch::Tensor input = frameTensor.unsqueeze(0);
+
+    // モデルのforward
+    auto outputs = organModel.forward({ input.to(torch::kCUDA), h_0, c_0}).toTuple();
+    torch::Tensor output = outputs->elements()[0].toTensor()[0]; // 推論出力
+    h_0 = outputs->elements()[1].toTensor(); // 新しい隠れ状態
+    c_0 = outputs->elements()[2].toTensor(); // 新しいセル状態
+
+    // 最大要素のインデックス（整数ラベル）を取得
+    int label = output.argmax(1)[0].item<int>(); // shape: [1], [0]でint化
+
+    return label;
+}

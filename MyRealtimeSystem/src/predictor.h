@@ -37,7 +37,7 @@ std::vector<float> runTreatmentInference(
  * @param[in,out] c_0 LSTMのセル状態
  * @return 各クラスの確率（float型ベクトル）
  */
-std::vector<float> runOrganInference(
+int runOrganInference(
     const torch::Tensor& frameTensor,
     torch::jit::script::Module& model,
     torch::Tensor& h_0, torch::Tensor& c_0

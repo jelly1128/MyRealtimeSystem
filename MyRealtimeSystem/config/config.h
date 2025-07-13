@@ -5,13 +5,15 @@
 
 // モデルのパス
 const std::string TREATMENT_MODEL_PATH = "models/treatment_model_fold_0_best.pt";
-const std::string ORGAN_MODEL_PATH = "models/poc_model_v4_no_resize270_epoch50_BEST.pt";
+//const std::string ORGAN_MODEL_PATH = "models/poc_model_v4_no_resize270_epoch50_BEST.pt";
+const std::string ORGAN_MODEL_PATH = "models/umetsu_model.pt";
 
 // 動画から取得場合の動画パス
 const std::string VIDEO_PATH = "D:/M1/動画とか/000001-002.mov";
 
 // 画像フォルダから取得場合のフォルダパス
-const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
+//const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
+const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
 const std::string VIDEO_FOLDER_PATH = std::string("images/") + VIDEO_NAME + "/"; // 動画フォルダパス
 
 // 処置検出用出力ファイル

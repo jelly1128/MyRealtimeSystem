@@ -29,7 +29,8 @@ bool loadFramesFromVideo(const std::string& videoPath, std::vector<cv::Mat>& fra
 // フレーム番号を抽出する関数
 int extractFrameNumber(const std::string& filename) {
     std::smatch match;
-    std::regex pattern(R"(_(\d+)\.png$)");
+    // _数字.png または 数字.png のどちらにもマッチ
+    std::regex pattern(R"((?:_|/)?(\d+)\.png$)");
     if (std::regex_search(filename, match, pattern)) {
         return std::stoi(match[1]);  // マッチした番号を整数に変換
     }
@@ -42,6 +43,8 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
     frames.clear();
     std::vector<cv::String> filepaths;
 
+	//std::vector<int> frameNumbers; // for debug: フレーム番号を保持するためのベクター
+
     cv::glob(folderPath + "/*.png", filepaths, false);
     if (filepaths.empty()) return false;
 
@@ -52,20 +55,27 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
 
     for (const auto& path : filepaths) {
         cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
+        int frameNum = extractFrameNumber(path);
         if (!img.empty()) {
             frames.push_back(img);
+			//frameNumbers.push_back(frameNum); // for debug: フレーム番号を追加
         }
         else {
             std::cerr << "Failed to load image: " << path << std::endl;
         }
     }
 
+	// for debug: フレーム番号を表示
+    /*std::cout << "Loaded frame numbers: ";
+    for (auto num : frameNumbers) std::cout << num << " ";
+    std::cout << std::endl;*/
+
     return !frames.empty();
 }
 
 
 // 画像前処理
-torch::Tensor preprocessFrame(
+torch::Tensor preprocessFrameForTreatment(
     const cv::Mat& frame,
     int inputWidth, int inputHeight, // リサイズ後のサイズ
     const cv::Rect& cropBox,         // クロップ領域（未指定なら全体)
@@ -124,6 +134,68 @@ torch::Tensor preprocessFrame(
     inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
 
     inputTensor = inputTensor.to(torch::kCUDA);
+
+    return inputTensor;
+}
+
+
+// 画像前処理
+torch::Tensor preprocessFrameForOrgan(
+    const cv::Mat& frame,
+    int inputWidth, int inputHeight, // リサイズ後のサイズ
+    const cv::Rect& cropBox,         // クロップ領域（未指定なら全体)
+    const cv::Mat& mask              // マスク画像（空なら未使用）
+) {
+    frame.clone();
+
+    // --- (1) マスク適用 ---
+    cv::Mat masked;
+    if (!mask.empty() && mask.size() == frame.size()) {
+        cv::bitwise_and(frame, frame, masked, mask);
+    }
+    else {
+        masked = frame.clone();
+    }
+
+    // --- (2) 中央inputWidth×inputHeightクロップ ---
+    int x = (masked.cols - inputWidth) / 2; // 338-224=114 → x=57
+    int y = (masked.rows - inputHeight) / 2; // 270-224=46 → y=23
+
+    cv::Rect centerCropBox(x, y, inputWidth, inputHeight);
+    cv::Mat cropped = masked(centerCropBox).clone();
+
+    // --- (4) カラーチャンネル変換 ---
+    cv::Mat rgb;
+    cv::cvtColor(cropped, rgb, cv::COLOR_BGR2RGB);
+    rgb.convertTo(rgb, CV_32F, 1.0 / 255.0);
+    rgb = rgb.clone();  // 連続化のためにclone
+
+    // === デバッグ表示 ===
+    //{
+    //    cv::Mat debugImg, debugShow;
+    //    rgb.convertTo(debugImg, CV_8U, 255.0); // float → uchar
+    //    cv::cvtColor(debugImg, debugShow, cv::COLOR_RGB2BGR); // RGB→BGRに戻す
+    //    if (!debugShow.empty()) {
+    //        cv::imshow("Debug RGB", debugShow);
+    //        int key = cv::waitKey(0);
+    //    }
+    //    else {
+    //        std::cerr << "debugShow is empty! Cannot show window." << std::endl;
+    //    }
+    //}
+    // ==================
+
+    // --- (5) Tensor変換 ---
+    torch::Tensor inputTensor = torch::from_blob(
+        rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
+    inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
+
+    inputTensor = inputTensor.to(torch::kCUDA);
+
+    // --- (6) 正規化 ---
+    torch::Tensor mean = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
+    torch::Tensor std = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
+    inputTensor = (inputTensor - mean) / std;
 
     return inputTensor;
 }
