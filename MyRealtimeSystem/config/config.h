@@ -33,9 +33,11 @@ constexpr int FRAME_INTERVAL = 10;
 
 // 推論用画像のパラメータ
 const std::string MASK_IMAGE_PATH = "images/fujifilm_mask.png"; // マスク画像のパス
-const cv::Rect CROP_BOX(330, 25, 1260, 970); // クロップボックス（x, y, width, height）
+const cv::Rect TREATMENT_CROP_BOX(330, 25, 1260, 970); // クロップボックス（x, y, width, height）
+const cv::Rect ORGAN_CROP_BOX(320, 28, 1280, 1024); // クロップボックス（x, y, width, height）
 constexpr int INPUT_WIDTH = 224;
 constexpr int INPUT_HEIGHT = 224;
+constexpr int ORGAN_INPUT_WIDTH = 270; // 臓器分類用の入力幅
 
 // 処置検出
 constexpr int NUM_CLASSES = 15;                     // 処置検出モデルのクラス数

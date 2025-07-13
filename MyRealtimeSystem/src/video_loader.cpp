@@ -114,18 +114,16 @@ torch::Tensor preprocessFrameForTreatment(
 	rgb = rgb.clone();  // 連続化のためにclone
 
     // === デバッグ表示 ===
-    //{
-    //    cv::Mat debugImg, debugShow;
-    //    rgb.convertTo(debugImg, CV_8U, 255.0); // float → uchar
-    //    cv::cvtColor(debugImg, debugShow, cv::COLOR_RGB2BGR); // RGB→BGRに戻す
-    //    if (!debugShow.empty()) {
-    //        cv::imshow("Debug RGB", debugShow);
-    //        int key = cv::waitKey(0);
-    //    }
-    //    else {
-    //        std::cerr << "debugShow is empty! Cannot show window." << std::endl;
-    //    }
-    //}
+    /*cv::imshow("1. Masked", masked);
+    std::cout << "Masked size: " << masked.cols << "x" << masked.rows << std::endl;
+
+    cv::imshow("2. Crop", cropped);
+    std::cout << "Cropped size: " << cropped.cols << "x" << cropped.rows << std::endl;
+
+    cv::imshow("3. Resized", resized);
+    std::cout << "Resized size: " << resized.cols << "x" << resized.rows << std::endl;
+
+    cv::waitKey(0);*/
     // ==================
 
 	// --- (5) Tensor変換 ---
@@ -143,12 +141,13 @@ torch::Tensor preprocessFrameForTreatment(
 torch::Tensor preprocessFrameForOrgan(
     const cv::Mat& frame,
     int inputWidth, int inputHeight, // リサイズ後のサイズ
-    const cv::Rect& cropBox,         // クロップ領域（未指定なら全体)
+	const int targetShort,           // 短辺の目標サイズ
+    const cv::Rect& cropBox,         // クロップボックス（デフォルトは全体）
     const cv::Mat& mask              // マスク画像（空なら未使用）
 ) {
     frame.clone();
 
-    // --- (1) マスク適用 ---
+    // --- (1) マスク適用（frame全体にmask。maskサイズはframeと同じ） ---
     cv::Mat masked;
     if (!mask.empty() && mask.size() == frame.size()) {
         cv::bitwise_and(frame, frame, masked, mask);
@@ -157,42 +156,66 @@ torch::Tensor preprocessFrameForOrgan(
         masked = frame.clone();
     }
 
-    // --- (2) 中央inputWidth×inputHeightクロップ ---
-    int x = (masked.cols - inputWidth) / 2; // 338-224=114 → x=57
-    int y = (masked.rows - inputHeight) / 2; // 270-224=46 → y=23
+    // --- (2) cropBoxでクロップ（ここで部分抽出） ---
+    cv::Mat croppedFirst;
+    if (cropBox.width > 0 && cropBox.height > 0 &&
+        cropBox.x >= 0 && cropBox.y >= 0 &&
+        cropBox.x + cropBox.width <= masked.cols &&
+        cropBox.y + cropBox.height <= masked.rows) {
+        croppedFirst = masked(cropBox).clone();
+    }
+    else {
+        croppedFirst = masked.clone();  // クロップしない場合は全体
+    }
+
+    // --- (3) SmallestMaxSize（短辺=targetShortでアスペクト比維持リサイズ） ---
+    int origW = croppedFirst.cols;
+    int origH = croppedFirst.rows;
+    float scale = (float)targetShort / std::min(origW, origH);
+    int resizedW = std::round(origW * scale);
+    int resizedH = std::round(origH * scale);
+
+    cv::Mat resized;
+    cv::resize(croppedFirst, resized, cv::Size(resizedW, resizedH));
+
+    // --- (4) 中央inputWidth×inputHeightクロップ ---
+    int x = (resized.cols - inputWidth) / 2; // 338-224=114 → x=57
+    int y = (resized.rows - inputHeight) / 2; // 270-224=46 → y=23
 
     cv::Rect centerCropBox(x, y, inputWidth, inputHeight);
-    cv::Mat cropped = masked(centerCropBox).clone();
+    cv::Mat cropped = resized(centerCropBox).clone();
 
-    // --- (4) カラーチャンネル変換 ---
+    // --- (5) カラーチャンネル変換 ---
     cv::Mat rgb;
     cv::cvtColor(cropped, rgb, cv::COLOR_BGR2RGB);
     rgb.convertTo(rgb, CV_32F, 1.0 / 255.0);
     rgb = rgb.clone();  // 連続化のためにclone
 
     // === デバッグ表示 ===
-    //{
-    //    cv::Mat debugImg, debugShow;
-    //    rgb.convertTo(debugImg, CV_8U, 255.0); // float → uchar
-    //    cv::cvtColor(debugImg, debugShow, cv::COLOR_RGB2BGR); // RGB→BGRに戻す
-    //    if (!debugShow.empty()) {
-    //        cv::imshow("Debug RGB", debugShow);
-    //        int key = cv::waitKey(0);
-    //    }
-    //    else {
-    //        std::cerr << "debugShow is empty! Cannot show window." << std::endl;
-    //    }
-    //}
+    // デバッグウィンドウをすべて表示
+    /*cv::imshow("1. Masked", masked);
+	std::cout << "Masked size: " << masked.cols << "x" << masked.rows << std::endl;
+
+    cv::imshow("2. Cropped First", croppedFirst);
+    std::cout << "Cropped size: " << croppedFirst.cols << "x" << croppedFirst.rows << std::endl;
+
+    cv::imshow("3. Resized", resized);
+    std::cout << "Resized size: " << resized.cols << "x" << resized.rows << std::endl;
+
+    cv::imshow("4. Center Cropped", cropped);
+    std::cout << "Cropped size after center crop: " << cropped.cols << "x" << cropped.rows << std::endl;
+
+    cv::waitKey(0);*/
     // ==================
 
-    // --- (5) Tensor変換 ---
+    // --- (6) Tensor変換 ---
     torch::Tensor inputTensor = torch::from_blob(
         rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
     inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
 
     inputTensor = inputTensor.to(torch::kCUDA);
 
-    // --- (6) 正規化 ---
+    // --- (7) 正規化 ---
     torch::Tensor mean = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
     torch::Tensor std = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
     inputTensor = (inputTensor - mean) / std;

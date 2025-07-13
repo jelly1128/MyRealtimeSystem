@@ -29,32 +29,38 @@ int main() {
 
 	timerLoad.stop();
 
-	TimeLogger timerRead("フレーム読み込み");
+	//TimeLogger timerRead("フレーム読み込み");
 
 	// 2. フレーム読み込み (動画or画像)
 	// 動画からフレームを読み込む
-    /*std::vector<cv::Mat> frames;
-    if (!loadFramesFromVideo(VIDEO_PATH, frames, FRAME_INTERVAL)) {
-		log("動画のフレームの読み込みに失敗しました。", true);
-		closeLog();
-        return -1;
-	} else {
-		log("動画のフレームの読み込みに成功しました。", true);
-		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
-	}*/
+ //   std::vector<cv::Mat> frames;
+ //   if (!loadFramesFromVideo(VIDEO_PATH, frames, FRAME_INTERVAL)) {
+	//	log("動画のフレームの読み込みに失敗しました。", true);
+	//	closeLog();
+ //       return -1;
+	//} else {
+	//	log("動画のフレームの読み込みに成功しました。", true);
+	//	//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
+	//}
 
 	//timerRead.stop();
 
 	//TimeLogger timerPreprocess("フレーム前処理");
 
-	//// 画像前処理
-	//std::vector<torch::Tensor> frameTensors;
-	//for (cv::Mat& frame : frames) {
-	//	torch::Tensor frameTensor = preprocessFrameForTreatment(frame, INPUT_WIDTH, INPUT_HEIGHT, CROP_BOX, cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE));
-	//	frameTensors.push_back(frameTensor);
-	//}
+	// 画像前処理
+	/*std::vector<torch::Tensor> frameTreatmentTensors;
+	for (cv::Mat& frame : frames) {
+		torch::Tensor frameTensor = preprocessFrameForTreatment(frame, INPUT_WIDTH, INPUT_HEIGHT, TREATMENT_CROP_BOX, cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE));
+		frameTreatmentTensors.push_back(frameTensor);
+	}*/
 
-	//TimeLogger timerRead("フレーム読み込み");
+	/*std::vector<torch::Tensor> frameOrganTensors;
+	for (cv::Mat& frame : frames) {
+		torch::Tensor frameTensor = preprocessFrameForOrgan(frame, INPUT_WIDTH, INPUT_HEIGHT, ORGAN_INPUT_WIDTH, ORGAN_CROP_BOX, cv::imread(MASK_IMAGE_PATH, cv::IMREAD_GRAYSCALE));
+		frameOrganTensors.push_back(frameTensor);
+	}*/
+
+	TimeLogger timerRead("フレーム読み込み");
 
 	// 画像フォルダから読み込む
 	std::vector<cv::Mat> frames;
@@ -90,26 +96,26 @@ int main() {
 
 	// 3. 推論
 	// 処置検出の推論の実行
-    std::vector<std::vector<float>> treatmentProbabilities;
+    /*std::vector<std::vector<float>> treatmentProbabilities;
     for (const torch::Tensor& frameTensor : frameTreatmentTensors) {
 		treatmentProbabilities.push_back(runTreatmentInference(frameTensor, treatmentModel));
-	}
+	}*/
 
 	// 隠れ状態とセル状態の初期化
-	torch::Tensor h_0 = torch::zeros({ 2, 1, 128 }, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
-	torch::Tensor c_0 = torch::zeros({ 2, 1, 128 }, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
+	//torch::Tensor h_0 = torch::zeros({ 2, 1, 128 }, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
+	//torch::Tensor c_0 = torch::zeros({ 2, 1, 128 }, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
 
-	// 臓器分類の推論の実行（まだ実装できてない）
-	std::vector<int> organLabels;
-	for (const torch::Tensor& frameTensor : frameOrganTensors) {
-		// 推論部分やfrom_blobの周辺
-		int label = runOrganInference(frameTensor, organModel, h_0, c_0);
-		organLabels.push_back(label);
-	}
+	//// 臓器分類の推論の実行（まだ実装できてない）
+	//std::vector<int> organLabels;
+	//for (const torch::Tensor& frameTensor : frameOrganTensors) {
+	//	// 推論部分やfrom_blobの周辺
+	//	int label = runOrganInference(frameTensor, organModel, h_0, c_0);
+	//	organLabels.push_back(label);
+	//}
 
 
 	// 推論結果の保存
-	if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
+	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
 		log("確率CSVの保存に失敗しました。", true);
 		closeLog();
 		return -1;
@@ -124,7 +130,7 @@ int main() {
 	}
 	else {
 		log("臓器分類の推論確率を " + ORGAN_OUTPUT_LABELS_CSV + " に保存しました。", true);
-	}
+	}*/
 
 	timerInference.stop();
 

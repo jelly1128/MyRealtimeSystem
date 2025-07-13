@@ -34,6 +34,7 @@ torch::Tensor preprocessFrameForTreatment(
 torch::Tensor preprocessFrameForOrgan(
 	const cv::Mat& frame,
 	int inputWidth, int inputHeight,      // 入力サイズ
+	const int targetShort = 270,          // 短辺の目標サイズ
 	const cv::Rect& cropBox = cv::Rect(), // クロップボックス（デフォルトは全体）
 	const cv::Mat& mask = cv::Mat()       // マスク画像（デフォルトはなし）
 );
