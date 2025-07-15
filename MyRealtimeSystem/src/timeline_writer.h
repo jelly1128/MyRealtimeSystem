@@ -6,5 +6,7 @@
 bool drawTimelineImage(
     const std::vector<int>& labels,
     const std::string& savePath,
-    int numClasses
+    int numSceneClasses,
+    int timelineWidth = 1200,
+    int timelineHeight = 35
 );

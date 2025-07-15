@@ -49,6 +49,10 @@ constexpr int SLIDING_WINDOW_STEP = 1;              // スライディングウ�
 // 臓器分類
 constexpr int ORGAN_SLIDING_WINDOW_SIZE = 60;       // スライディングウィンドウ（臓器境界探索）の幅
 
+// タイムライン画像のパラメータ
+constexpr int TIMELINE_IMAGE_WIDTH = 1000;          // タイムライン画像の幅
+constexpr int TIMELINE_IMAGE_HEIGHT = 50;         // タイムライン画像の高さ
+
 // ラベル種別定義
 enum class OrganLabel {
 	OUTSIDE = 0,           // 体外
