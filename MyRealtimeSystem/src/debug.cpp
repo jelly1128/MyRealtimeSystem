@@ -12,11 +12,7 @@ namespace {
 }
 
 // CSVファイルからフレームの確率を読み込む関数
-//使い方
-// for debug
-// std::vector<std::vector<float>> frameProbabilities;
-// frameProbabilities = loadFrameProbabilitiesFromCSV(DEBUG_PROBS_CSV);
-std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string& csvPath) {
+std::vector<std::vector<float>> loadTreatmentProbabilitiesFromCSV(const std::string& csvPath) {
     std::vector<std::vector<float>> probabilities;
     std::ifstream file(csvPath);
     if (!file.is_open()) {
@@ -44,11 +40,46 @@ std::vector<std::vector<float>> loadFrameProbabilitiesFromCSV(const std::string&
         if (!row.empty()) {
             probabilities.push_back(row);
 		}
+        // === デバッグ表示 ===
+        /*std::cout << "[DEBUG] 読み込んだ確率: ";
+        for (const auto& prob : row) {
+            std::cout << prob << " ";
+        }
+		std::cout << std::endl;*/
+        // ==================
     }
     if (probabilities.empty()) {
         std::cerr << "[DEBUG] 確率が1つも読み込まれませんでした。" << std::endl;
     }
 	return probabilities;
+}
+
+
+std::vector<int> loadSingleLabelsFromCSV(const std::string& csvPath) {
+    std::vector<int> labels;
+    std::ifstream file(csvPath);
+    if (!file.is_open()) {
+        std::cerr << "[DEBUG] ファイルを開けません: " << csvPath << std::endl;
+        return labels;  // 空のベクトルを返す
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        try {
+            int label = std::stoi(line);
+			// === デバッグ表示 ===
+            //std::cout << "[DEBUG] 読み込んだ値: " << label << std::endl;
+            // ==================
+            labels.push_back(label);
+        }
+        catch (const std::invalid_argument& e) {
+            std::cerr << "Invalid label: " << line << std::endl;
+            labels.push_back(-1);  // エラー処理（必要に応じて変更）
+        }
+    }
+    if (labels.empty()) {
+        std::cerr << "[DEBUG] ラベルが1つも読み込まれませんでした。" << std::endl;
+    }
+    return labels;
 }
 
 
@@ -83,31 +114,6 @@ std::vector<std::vector<int>> loadFrameBinariesFromCSV(const std::string& csvPat
         std::cerr << "[DEBUG] バイナリが1つも読み込まれませんでした。" << std::endl;
     }
 	return binaries;
-}
-
-
-std::vector<int> loadWindowedSceneLabelsFromCSV(const std::string& csvPath) {
-    std::vector<int> labels;
-    std::ifstream file(csvPath);
-    if (!file.is_open()) {
-        std::cerr << "[DEBUG] ファイルを開けません: " << csvPath << std::endl;
-        return labels;  // 空のベクトルを返す
-    }
-    std::string line;
-    while (std::getline(file, line)) {
-        try {
-            int label = std::stoi(line);
-            labels.push_back(label);
-        }
-        catch (const std::invalid_argument& e) {
-            std::cerr << "Invalid label: " << line << std::endl;
-            labels.push_back(-1);
-        }
-    }
-    if (labels.empty()) {
-        std::cerr << "[DEBUG] ラベルが1つも読み込まれませんでした。" << std::endl;
-    }
-	return labels;
 }
 
 

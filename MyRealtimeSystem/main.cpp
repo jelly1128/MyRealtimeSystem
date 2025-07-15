@@ -15,19 +15,19 @@ int main() {
 	log("プログラム開始", true);
 	TimeLogger timerAll("全体処理時間");
 
-	TimeLogger timerLoad("モデル読み込み");
+	//TimeLogger timerLoad("モデル読み込み");
 
 	// 1. 初期化
     // モデルの読み込み
-    torch::jit::script::Module treatmentModel, organModel;
+    /*torch::jit::script::Module treatmentModel, organModel;
     if (!loadModel(TREATMENT_MODEL_PATH, treatmentModel) ||
 		!loadModel(ORGAN_MODEL_PATH, organModel)) {
 		log("モデルの読み込みに失敗しました。", true);
 		closeLog();
         return -1;
-    }
+    }*/
 
-	timerLoad.stop();
+	//timerLoad.stop();
 
 	//TimeLogger timerRead("フレーム読み込み");
 
@@ -60,39 +60,39 @@ int main() {
 		frameOrganTensors.push_back(frameTensor);
 	}*/
 
-	TimeLogger timerRead("フレーム読み込み");
+	//TimeLogger timerRead("フレーム読み込み");
 
 	// 画像フォルダから読み込む
-	std::vector<cv::Mat> frames;
-	if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
-		log("フレームの読み込みに失敗しました。", true);
-		closeLog();
-	} else {
-		log("フレームの読み込みに成功しました。", true);
-		log("読み込んだフレーム数: " + std::to_string(frames.size()), true);
-		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
-	}
+	//std::vector<cv::Mat> frames;
+	//if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
+	//	log("フレームの読み込みに失敗しました。", true);
+	//	closeLog();
+	//} else {
+	//	log("フレームの読み込みに成功しました。", true);
+	//	log("読み込んだフレーム数: " + std::to_string(frames.size()), true);
+	//	//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
+	//}
 
-	timerRead.stop();
+	//timerRead.stop();
 
-	TimeLogger timerPreprocess("フレーム前処理");
+	//TimeLogger timerPreprocess("フレーム前処理");
 
 	// 画像前処理
-	std::vector<torch::Tensor> frameTreatmentTensors;
+	/*std::vector<torch::Tensor> frameTreatmentTensors;
 	for (cv::Mat& frame : frames) {
 		torch::Tensor frameTensor = preprocessFrameForTreatment(frame, INPUT_WIDTH, INPUT_HEIGHT);
 		frameTreatmentTensors.push_back(frameTensor);
-	}
+	}*/
 
-	std::vector<torch::Tensor> frameOrganTensors;
+	/*std::vector<torch::Tensor> frameOrganTensors;
 	for (cv::Mat& frame : frames) {
 		torch::Tensor frameTensor = preprocessFrameForOrgan(frame, INPUT_WIDTH, INPUT_HEIGHT);
 		frameOrganTensors.push_back(frameTensor);
-	}
+	}*/
 
-	timerPreprocess.stop();
+	//timerPreprocess.stop();
 
-	TimeLogger timerInference("処置検出の推論");
+	//TimeLogger timerInference("処置検出の推論");
 
 	// 3. 推論
 	// 処置検出の推論の実行
@@ -124,25 +124,60 @@ int main() {
 	}
 
 	if (!saveLabelsToCSV(ORGAN_OUTPUT_LABELS_CSV, organLabels)) {
+		log("臓器分類のラベルCSVの保存に失敗しました。", true);
+		closeLog();
+		return -1;
+	}
+	else {
+		log("臓器分類の推論ラベルを " + ORGAN_OUTPUT_LABELS_CSV + " に保存しました。", true);
+	}*/
+
+	//timerInference.stop();
+
+	// for debug
+    //std::vector<std::vector<float>> treatmentProbabilities;
+	//treatmentProbabilities = loadTreatmentProbabilitiesFromCSV(TREATMENT_OUTPUT_PROBS_CSV);
+
+	//std::vector<int> organLabels;
+	//organLabels = loadSingleLabelsFromCSV(ORGAN_OUTPUT_LABELS_CSV);
+
+	//TimeLogger timerBinarize("バイナリ化");
+
+    // 4. 処理系
+	// 推論結果のバイナリ化
+    //std::vector<std::vector<int>> treatmentLabels = binarizeProbabilities(treatmentProbabilities, 0.5);
+
+	//timerBinarize.stop();
+
+	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_LABELS_CSV, treatmentLabels, "label_")) {
+		log("バイナリ化された処置ラベルの保存に失敗しました。", true);
+		closeLog();
+		return -1;
+	} else {
+		log("バイナリ化された処置ラベルを " + TREATMENT_OUTPUT_LABELS_CSV + " に保存しました。", true);
+	}*/
+
+	//TimeLogger timerSW("スライディングウィンドウによるシーンラベル抽出");
+
+	// スライディングウィンドウを使用してシーンラベルを抽出
+	//std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
+
+	/*if (!saveLabelsToCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV, treatmentSingleSceneLabels)) {
 		log("臓器分類の確率CSVの保存に失敗しました。", true);
 		closeLog();
 		return -1;
 	}
 	else {
-		log("臓器分類の推論確率を " + ORGAN_OUTPUT_LABELS_CSV + " に保存しました。", true);
+		log("臓器分類の推論確率を " + TREATMENT_OUTPUT_SCENE_LABELS_CSV + " に保存しました。", true);
 	}*/
 
-	timerInference.stop();
+	//timerSW.stop();
 
-    // 4. 処理系
-	// 推論結果のバイナリ化
-    //std::vector<std::vector<int>> frameBinaryLabels = binarizeProbabilities(frameProbabilities, 0.5);
+	// for debug
+	std::vector<int> treatmentSingleSceneLabels;
+	treatmentSingleSceneLabels = loadSingleLabelsFromCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV);
 
-    // シーンラベルの抽出
-    //std::vector<std::vector<int>> sceneClassLabels;
-    //for (const std::vector<int>& vec : frameBinaryLabels) {
-    //    sceneClassLabels.emplace_back(vec.begin(), vec.begin() + NUM_SCENE_CLASSES);  // 0〜5の主クラスのみ
-    //}
+
 	timerAll.stop();
 	closeLog();
     return 0;

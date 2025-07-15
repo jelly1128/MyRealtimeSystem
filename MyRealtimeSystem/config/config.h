@@ -17,15 +17,13 @@ const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
 const std::string VIDEO_FOLDER_PATH = std::string("images/") + VIDEO_NAME + "/"; // 動画フォルダパス
 
 // 処置検出用出力ファイル
-const std::string TREATMENT_OUTPUT_PROBS_CSV    = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_probs.csv";
-const std::string TREATMENT_OUTPUT_LABELS_CSV   = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_labels.csv";
-const std::string TREATMENT_OUTPUT_SMOOTHED_CSV = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_smoothed.csv";
-const std::string TREATMENT_TIMELINE_IMAGE_PATH = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_timeline.png";
+const std::string TREATMENT_OUTPUT_PROBS_CSV        = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_probs.csv";
+const std::string TREATMENT_OUTPUT_LABELS_CSV       = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_labels.csv";
+const std::string TREATMENT_OUTPUT_SCENE_LABELS_CSV = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_scene_labels.csv";
+const std::string TREATMENT_TIMELINE_IMAGE_PATH     = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_timeline.png";
 
 // 臓器分類用出力ファイル
-const std::string ORGAN_OUTPUT_PROBS_CSV    = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_organ_probs.csv";
 const std::string ORGAN_OUTPUT_LABELS_CSV   = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_organ_labels.csv";
-const std::string ORGAN_OUTPUT_SMOOTHED_CSV = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_organ_smoothed.csv";
 const std::string ORGAN_TIMELINE_IMAGE_PATH = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_organ_timeline.png";
 
 // 画像取得間隔（フレーム数）
