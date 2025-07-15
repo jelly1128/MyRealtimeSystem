@@ -1,6 +1,5 @@
 #include "video_loader.h"
 #include <opencv2/opencv.hpp>
-#include <torch/torch.h>
 #include <regex>
 
 
@@ -75,7 +74,7 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
 
 
 // 画像前処理
-torch::Tensor preprocessFrameForTreatment(
+cv::Mat preprocessFrameForTreatment(
     const cv::Mat& frame,
     int inputWidth, int inputHeight, // リサイズ後のサイズ
     const cv::Rect& cropBox,         // クロップ領域（未指定なら全体)
@@ -125,20 +124,12 @@ torch::Tensor preprocessFrameForTreatment(
 
     cv::waitKey(0);*/
     // ==================
-
-	// --- (5) Tensor変換 ---
-    torch::Tensor inputTensor = torch::from_blob(
-        rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
-    inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
-
-    inputTensor = inputTensor.to(torch::kCUDA);
-
-    return inputTensor;
+	return rgb;
 }
 
 
 // 画像前処理
-torch::Tensor preprocessFrameForOrgan(
+cv::Mat preprocessFrameForOrgan(
     const cv::Mat& frame,
     int inputWidth, int inputHeight, // リサイズ後のサイズ
 	const int targetShort,           // 短辺の目標サイズ
@@ -208,19 +199,7 @@ torch::Tensor preprocessFrameForOrgan(
     cv::waitKey(0);*/
     // ==================
 
-    // --- (6) Tensor変換 ---
-    torch::Tensor inputTensor = torch::from_blob(
-        rgb.data, { 1, inputHeight, inputWidth, 3 }, torch::kFloat32);
-    inputTensor = inputTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
-
-    inputTensor = inputTensor.to(torch::kCUDA);
-
-    // --- (7) 正規化 ---
-    torch::Tensor mean = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
-    torch::Tensor std = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
-    inputTensor = (inputTensor - mean) / std;
-
-    return inputTensor;
+    return rgb;
 }
 
 

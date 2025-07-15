@@ -16,6 +16,9 @@ const std::string VIDEO_PATH = "D:/M1/動画とか/000001-002.mov";
 const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
 const std::string VIDEO_FOLDER_PATH = std::string("images/") + VIDEO_NAME + "/"; // 動画フォルダパス
 
+// ログ用のファイルパス
+const std::string LOG_FILE_PATH = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_log.txt";
+
 // 処置検出用出力ファイル
 const std::string TREATMENT_OUTPUT_PROBS_CSV        = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_probs.csv";
 const std::string TREATMENT_OUTPUT_LABELS_CSV       = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_labels.csv";

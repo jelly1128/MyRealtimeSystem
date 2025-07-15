@@ -1,6 +1,5 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-#include <torch/script.h>
 #include <vector>
 #include <string>
 
@@ -24,14 +23,14 @@ bool loadFramesFromDirectory(const std::string& folderPath, std::vector<cv::Mat>
 
 // フレームを前処理する関数
 // クロップ・マスクはオプションで指定可能
-torch::Tensor preprocessFrameForTreatment(
+cv::Mat preprocessFrameForTreatment(
 	const cv::Mat& frame, 
 	int inputWidth, int inputHeight,      // 入力サイズ
 	const cv::Rect& cropBox = cv::Rect(), // クロップボックス（デフォルトは全体）
 	const cv::Mat& mask = cv::Mat()       // マスク画像（デフォルトはなし）
 );
 
-torch::Tensor preprocessFrameForOrgan(
+cv::Mat preprocessFrameForOrgan(
 	const cv::Mat& frame,
 	int inputWidth, int inputHeight,      // 入力サイズ
 	const int targetShort = 270,          // 短辺の目標サイズ

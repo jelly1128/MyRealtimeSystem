@@ -19,26 +19,26 @@ bool loadModel(
 
 /** 
  * @brief 1フレームのテンソルでモデル推論を実行し、確率ベクトルを返す
- * @param[in] frameTensor 前処理済みの画像テンソル (1,3,H,W)
+ * @param[in] frame 前処理済みの画像
  * @param[in] model 推論用PyTorchモデル
  * @return 各クラスの確率（float型ベクトル）
  */
  // 処置検出モデルの推論を実行する関数
 std::vector<float> runTreatmentInference(
-    const torch::Tensor& frameTensor, 
+    const cv::Mat& frame,
     torch::jit::script::Module& treatmentModel
 );
 
 /**
  * @brief 臓器分類LSTMモデルで推論し、確率ベクトルを返す
- * @param[in] frameTensor 前処理済みの画像テンソル (1,3,H,W)
+ * @param[in] frame 前処理済みの画像
  * @param[in] model 臓器分類PyTorchモデル
  * @param[in,out] h_0 LSTMの隠れ状態
  * @param[in,out] c_0 LSTMのセル状態
  * @return 各クラスの確率（float型ベクトル）
  */
 int runOrganInference(
-    const torch::Tensor& frameTensor,
+    const cv::Mat& frame,
     torch::jit::script::Module& model,
     torch::Tensor& h_0, torch::Tensor& c_0
 );

@@ -1,4 +1,5 @@
 #include "predictor.h"
+#include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
 
@@ -18,9 +19,16 @@ bool loadModel(const std::string& modelPath, torch::jit::script::Module& model) 
 
 // 処置検出モデルの推論を実行する関数
 std::vector<float> runTreatmentInference(
-    const torch::Tensor& frameTensor,
+    const cv::Mat& frame,
     torch::jit::script::Module& treatmentModel
 ) {
+    // --- (5) Tensor変換 ---
+    torch::Tensor frameTensor = torch::from_blob(
+        frame.data, { 1, frame.rows, frame.cols, 3 }, torch::kFloat32);
+    frameTensor = frameTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
+
+    frameTensor = frameTensor.to(torch::kCUDA);
+
     torch::NoGradGuard no_grad;                                    // 勾配計算を無効化
     torch::Tensor input = frameTensor.to(torch::kCUDA);            // GPU転送
     auto output = treatmentModel.forward({ input }).toTensor();    // モデルに入力を渡す
@@ -33,11 +41,21 @@ std::vector<float> runTreatmentInference(
 
 // 臓器分類モデルの推論を実行する関数
 int runOrganInference(
-    const torch::Tensor& frameTensor, 
+    const cv::Mat& frame,
     torch::jit::script::Module& organModel,
     torch::Tensor& h_0, torch::Tensor& c_0
 ) {
-    torch::NoGradGuard no_grad;
+    // --- (6) Tensor変換 ---
+    torch::Tensor frameTensor = torch::from_blob(
+        frame.data, { 1, frame.rows, frame.cols, 3 }, torch::kFloat32);
+    frameTensor = frameTensor.permute({ 0, 3, 1, 2 }).clone();  // NHWC → NCHW
+
+    frameTensor = frameTensor.to(torch::kCUDA);
+
+    // --- (7) 正規化 ---
+    torch::Tensor mean = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
+    torch::Tensor std = torch::tensor({ 0.5, 0.5, 0.5 }).view({ 1, 3, 1, 1 }).to(torch::kCUDA);
+    frameTensor = (frameTensor - mean) / std;
 
     // [1, 3, H, W] → [1, 1, 3, H, W]
     torch::Tensor input = frameTensor.unsqueeze(0);
