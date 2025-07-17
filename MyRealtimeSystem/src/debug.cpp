@@ -120,7 +120,7 @@ std::vector<std::vector<int>> loadFrameBinariesFromCSV(const std::string& csvPat
 // ログ初期化
 void initLog(const std::string& filename) {
     std::lock_guard<std::mutex> lock(g_logMutex);
-    g_logFile.open(filename, std::ios::app);
+    g_logFile.open(filename, std::ios::trunc);
     if (!g_logFile.is_open()) {
         std::cerr << "ログファイルを開けません: " << filename << std::endl;
     }

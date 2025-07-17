@@ -142,7 +142,7 @@ int main() {
 	/*std::vector<int> organLabels;
 	organLabels = loadSingleLabelsFromCSV(ORGAN_OUTPUT_LABELS_CSV);*/
 
-	std::cout << treatmentProbabilities.size() << " frames loaded." << std::endl;
+	//std::cout << treatmentProbabilities.size() << " frames loaded." << std::endl;
 
 	//TimeLogger timerBinarize("バイナリ化");
 
@@ -150,7 +150,7 @@ int main() {
 	// 推論結果のバイナリ化
 	/*std::vector<std::vector<int>> treatmentLabels;
 	for (const auto& probs : treatmentProbabilities) {
-		std::vector<int> binaryLabels = binarizeProbabilities(probs, NUM_CLASSES);
+		std::vector<int> binaryLabels = binarizeProbabilities(probs, BINARY_THRESHOLD);
 		treatmentLabels.push_back(binaryLabels);
 	}*/
 
@@ -167,15 +167,15 @@ int main() {
 	//TimeLogger timerSW("スライディングウィンドウによるシーンラベル抽出");
 
 	// スライディングウィンドウを使用してシーンラベルを抽出
-	//std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabkaels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
+	/*std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
 
-	/*if (!saveLabelsToCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV, treatmentSingleSceneLabels)) {
-		log("臓器分類の確率CSVの保存に失敗しました。", true);
+	if (!saveLabelsToCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV, treatmentSingleSceneLabels)) {
+		log("スライディングウィンドウ適用後の処置ラベルの保存に失敗しました。", true);
 		closeLog();
 		return -1;
 	}
 	else {
-		log("臓器分類の推論確率を " + TREATMENT_OUTPUT_SCENE_LABELS_CSV + " に保存しました。", true);
+		log("スライディングウィンドウ適用後の処置ラベルを " + TREATMENT_OUTPUT_SCENE_LABELS_CSV + " に保存しました。", true);
 	}*/
 
 	//timerSW.stop();
@@ -203,11 +203,17 @@ int main() {
 	// サムネイル選定の実施
 	// 動画全体のフレーム情報
 	std::vector<FrameData> VideoFrameData;
+	std::map<int, std::priority_queue<ThumbnailCandidate>> topKThumbnails;
+	const int TOP_K = 20;  // 上位何枚を取得するか
+
+	// 今連続中の区間
+	std::map<int, VideoSegment> currentSegment;
+
+	// これまでで最長だった区間
+	std::map<int, VideoSegment> longestSegment;
 
 	// スライディングウィンドウ用の状態（履歴と前回ラベル）
 	std::deque<std::vector<int>> windowSceneLabelBuffer;
-	std::deque<float> eventSumBuffer;
-	std::deque<int> frameIndexBuffer;
 	int prevSceneLabel = -1;
 	const int halfWindowSize = TREATMENT_SLIDING_WINDOW_SIZE / 2; // ウィンドウの半分のサイズ
 
@@ -223,15 +229,16 @@ int main() {
 		// 情報更新
 		FrameData frameData;
 		frameData.frameIndex = i;
+		frameData.treatmentProbabilities = treatmentProb;
 		frameData.eventProbsSum = std::accumulate(treatmentProb.begin() + NUM_SCENE_CLASSES, treatmentProb.end(), 0.0f);
 
 		VideoFrameData.push_back(frameData);
 
-		// スライディングウィンドウを使用してシーンラベルを抽出
-		std::vector<int> treatmentBinaryLabels = binarizeProbabilities(treatmentProb, 0.5);
+		// バイナリシーンラベルを抽出
+		std::vector<int> treatmentBinaryLabels = binarizeProbabilities(treatmentProb, BINARY_THRESHOLD);
 		std::vector<int> sceneBinaryLabel(treatmentBinaryLabels.begin(), treatmentBinaryLabels.begin() + NUM_SCENE_CLASSES);
 
-		// 3. スライディングウィンドウバッファ更新
+		// スライディングウィンドウバッファ更新
 		windowSceneLabelBuffer.push_back(sceneBinaryLabel);
 		if (windowSceneLabelBuffer.size() > TREATMENT_SLIDING_WINDOW_SIZE) {
 			windowSceneLabelBuffer.pop_front();
@@ -240,12 +247,67 @@ int main() {
 			continue;
 		}
 
+		// スライディングウィンドウの適用
 		auto windowCenterLabel = processSceneLabelSlidingWindow(windowSceneLabelBuffer, prevSceneLabel);
 
 		if (windowCenterLabel.has_value()) {
-			VideoFrameData[i - halfWindowSize].sceneLabel = windowCenterLabel.value();
-			prevSceneLabel = windowCenterLabel.value();
+			int centerIndex = i - halfWindowSize;           // ウィンドウの中心フレームのインデックス
+			int centerLabel = windowCenterLabel.value();    // スライディングウィンドウで決定したラベル
+
+			// スライディングウィンドウの中心フレームのシーンラベルを設定
+			VideoFrameData[centerIndex].sceneLabel = centerLabel;
+			// シーンラベルの確率を設定
+			VideoFrameData[centerIndex].sceneProb = VideoFrameData[centerIndex].treatmentProbabilities[centerLabel];
+			//prevSceneLabel = centerLabel;
+
+			// --- 動画セグメントの更新・サムネイル管理の追加 ----
+			ThumbnailCandidate candidate;
+			candidate.frameIndex = centerIndex;
+			//candidate.frame = frames[centerIndex].clone();  // フレーム画像を保持（必要なら）
+			candidate.deepLearningScore = VideoFrameData[centerIndex].sceneProb - VideoFrameData[centerIndex].eventProbsSum;  // シーンラベルの確率をスコアとして使用
+			candidate.highFrequencyScore = 0.0f;  // 高周波エネルギーのスコアは後で計算
+
+			// 区間管理
+			if (prevSceneLabel == -1 || centerLabel != prevSceneLabel) {
+				// 直前のラベルと違う場合，直前のラベル区間を最長比較・更新
+				if (prevSceneLabel != -1 && currentSegment.count(prevSceneLabel)) {
+					if (currentSegment[prevSceneLabel].length > longestSegment[prevSceneLabel].length) {
+						longestSegment[prevSceneLabel] = currentSegment[prevSceneLabel];
+					}
+				}
+				// 新しいラベル区間を開始
+				VideoSegment newSegment;
+				newSegment.startFrameIndex = centerIndex;
+				newSegment.endFrameIndex = centerIndex;
+				newSegment.length = 1;  // 初期は1フレーム
+				newSegment.topKThumbnails.push(candidate);  // 初期のサムネイル候補を追加
+				currentSegment[centerLabel] = newSegment;
+			} else {
+				// 直前のラベルと同じ場合、区間を更新
+				currentSegment[centerLabel].endFrameIndex = centerIndex;
+				currentSegment[centerLabel].length++;
+				currentSegment[centerLabel].topKThumbnails.push(candidate);
+				// サムネイル候補がTOP_Kを超えた場合、最小値を削除
+				if (currentSegment[centerLabel].topKThumbnails.size() > TOP_K) {
+					currentSegment[centerLabel].topKThumbnails.pop();
+				}
+			}
+			prevSceneLabel = centerLabel;
 		}
+	}
+
+	// ループ後、最後の区間も最長更新を忘れずに
+	for (auto& [label, seg] : currentSegment) {
+		if (seg.length > longestSegment[label].length) {
+			longestSegment[label] = seg;
+		}
+	}
+
+	log("=== ラベルごとの最長区間 ===", true);
+	for (const auto& [label, seg] : longestSegment) {
+		log("Label " + std::to_string(label)
+			+ " [" + std::to_string(seg.startFrameIndex) + "," + std::to_string(seg.endFrameIndex) + "]"
+			+ " (length=" + std::to_string(seg.length) + ")", true);
 	}
 
 	// 動画全体のフレーム情報をlogに出力
