@@ -12,8 +12,8 @@ const std::string ORGAN_MODEL_PATH = "models/umetsu_model.pt";
 const std::string VIDEO_PATH = "D:/M1/動画とか/000001-002.mov";
 
 // 画像フォルダから取得場合のフォルダパス
-const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
-//const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
+//const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
+const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
 const std::string VIDEO_FOLDER_PATH = std::string("images/") + VIDEO_NAME + "/"; // 動画フォルダパス
 
 // ログ用のファイルパス
@@ -23,7 +23,8 @@ const std::string LOG_FILE_PATH = std::string("outputs/") + VIDEO_NAME + "/" + V
 const std::string TREATMENT_OUTPUT_PROBS_CSV        = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_probs.csv";
 const std::string TREATMENT_OUTPUT_LABELS_CSV       = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_labels.csv";
 const std::string TREATMENT_OUTPUT_SCENE_LABELS_CSV = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_scene_labels.csv";
-const std::string TREATMENT_TIMELINE_IMAGE_PATH     = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_timeline.png";
+const std::string TREATMENT_TIMELINE_IMAGE_PATH = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_treatment_timeline.png";
+const std::string HIGH_FREQ_CSV = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_high_frequency_scores.csv";
 
 // 臓器分類用出力ファイル
 const std::string ORGAN_OUTPUT_LABELS_CSV   = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_organ_labels.csv";

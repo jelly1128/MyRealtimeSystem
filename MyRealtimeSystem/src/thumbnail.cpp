@@ -4,7 +4,7 @@
 float computeHighFrequencyEnergy(const cv::Mat& inputImg) {
     cv::Mat gray;
     if (inputImg.channels() == 3) {
-        cv::cvtColor(inputImg, gray, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(inputImg, gray, cv::COLOR_RGB2GRAY);
     }
     else {
         gray = inputImg.clone();
@@ -32,6 +32,12 @@ float computeHighFrequencyEnergy(const cv::Mat& inputImg) {
     cv::Mat mask = cv::Mat::ones(gray.size(), CV_8UC1);
     cv::circle(mask, cv::Point(cx, cy), radius, cv::Scalar(0), -1);
 
+    // --- マスク（中心を四角形でカット） ---
+    //int radius = std::min(gray.rows, gray.cols) / 8;
+    //cv::Mat mask = cv::Mat::ones(gray.rows, gray.cols, CV_32F);
+    //cv::Rect lowFreqBox(cx - radius, cy - radius, radius * 2, radius * 2);
+    //mask(lowFreqBox) = 0.0f;  // 中心の低周波領域を0にする（四角形）
+
     // エネルギー計算
     std::vector<cv::Mat> channels(2);
     cv::split(dftImg, channels);
@@ -56,10 +62,21 @@ std::vector<ThumbnailCandidate> selectThumbnailsWithFrameGap(
     int frameGap,
     int topK
 ) {
+    std::vector<ThumbnailCandidate> allCandidates;
+    while (!topKThumbs.empty()) {
+        allCandidates.push_back(topKThumbs.top());
+        topKThumbs.pop();
+    }
+    // 厳密に降順sort
+    std::sort(allCandidates.begin(), allCandidates.end(),
+        [](const ThumbnailCandidate& a, const ThumbnailCandidate& b) {
+            return a.combinedScore() > b.combinedScore();
+        });
+
     std::vector<ThumbnailCandidate> selected;
     std::set<int> usedIndices;
-    while (!topKThumbs.empty() && selected.size() < topK) {
-        const auto& cand = topKThumbs.top();
+    for (const auto& cand : allCandidates) {
+        if (selected.size() >= topK) break;
         bool tooClose = false;
         for (int used : usedIndices) {
             if (std::abs(cand.frameIndex - used) < frameGap) {
@@ -71,7 +88,6 @@ std::vector<ThumbnailCandidate> selectThumbnailsWithFrameGap(
             selected.push_back(cand);
             usedIndices.insert(cand.frameIndex);
         }
-        topKThumbs.pop();
     }
     return selected;
 }

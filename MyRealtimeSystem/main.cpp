@@ -78,11 +78,32 @@ int main() {
 	//TimeLogger timerPreprocess("フレーム前処理");
 
 	// 画像前処理
-	/*std::vector<cv::Mat> processedFramesForTreatment;
+	std::vector<cv::Mat> processedFramesForTreatment;
 	for (cv::Mat& frame : frames) {
 		cv::Mat processedFrame = preprocessFrameForTreatment(frame, INPUT_WIDTH, INPUT_HEIGHT);
 		processedFramesForTreatment.push_back(processedFrame);
-	}*/
+	}
+
+	//std::ofstream ofs(HIGH_FREQ_CSV);
+	//if (!ofs.is_open()) {
+	//	std::cerr << "Failed to open output CSV file." << std::endl;
+	//	return 0;
+	//}
+
+	//// ヘッダー
+	//ofs << "frameIndex,highFrequencyScore\n";
+	//// 処理と保存
+	//int frameIndex = 0;
+	//for (const cv::Mat& frame : processedFramesForTreatment) {
+	//	// 高周波エネルギーの算出
+	//	float highFrequencyScore = computeHighFrequencyEnergy(frame);
+	//	// CSVに保存
+	//	ofs << frameIndex << "," << highFrequencyScore << "\n";
+
+	//	frameIndex++;
+	//}
+
+	//ofs.close();
 
     //showFrames(processedFramesForTreatment, true);  // フレームを表示する関数を呼び出す（デバッグ）
 
@@ -199,6 +220,7 @@ int main() {
         std::cout << "タイムライン画像を " << TREATMENT_TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
     }*/
 
+	
 	// for debug
 	// サムネイル選定の実施
 	// 動画全体のフレーム情報
@@ -218,12 +240,11 @@ int main() {
 	std::unordered_map<int, cv::Mat> windowFrameBuffer; // (frameIndex, image)のペア
 	std::deque<int> windowIndices;
 
-	std::cout << halfWindowSize << " frames for sliding window." << std::endl;
-
 	// 動画内の各フレームの推論デモ
 	for (int i = 0; i < treatmentProbabilities.size(); ++i) {
 		// 入力画像
-		cv::Mat inputImage = frames[i];
+		//cv::Mat inputImage = frames[i];
+		cv::Mat inputImage = processedFramesForTreatment[i];
 		// 処置確率
 		std::vector<float> treatmentProb = treatmentProbabilities[i];
 
@@ -244,8 +265,6 @@ int main() {
 		windowFrameBuffer[i] = inputImage.clone();
 		windowIndices.push_back(i);
 
-		std::cout << "frame " << std::to_string(i) << " : " << windowFrameBuffer.size() << " frames in window buffer. " << std::to_string(windowIndices.front()) << ": frame size" << std::endl;
-
 		if (windowIndices.size() > TREATMENT_SLIDING_WINDOW_SIZE) {
 			int oldestIndex = windowIndices.front();
 			windowIndices.pop_front();
@@ -258,8 +277,6 @@ int main() {
 			// ウィンドウサイズに満たない場合
 			continue;
 		}
-
-
 
 		// スライディングウィンドウの適用により、中心フレームのシーンラベルを決定
 		auto windowCenterLabel = processSceneLabelSlidingWindow(windowSceneLabelBuffer, prevSceneLabel);
@@ -278,8 +295,8 @@ int main() {
 			ThumbnailCandidate candidate;
 			candidate.frameIndex = centerIndex;
 			candidate.frame = windowFrameBuffer.find(centerIndex)->second.clone();  // ウィンドウ内のフレーム画像
-			candidate.deepLearningScore = VideoFrameData[centerIndex].sceneProb - VideoFrameData[centerIndex].eventProbsSum;  // シーンラベルの確率をスコアとして使用
-			candidate.highFrequencyScore = 0.0f;  // 高周波エネルギーのスコアは後で計算
+			candidate.deepLearningScore = VideoFrameData[centerIndex].sceneProb - VideoFrameData[centerIndex].eventProbsSum / 2;  // シーンラベルの確率をスコアとして使用
+			candidate.highFrequencyScore = computeHighFrequencyEnergy(candidate.frame);  // 高周波エネルギーを計算
 
 			// 区間管理
 			if (prevSceneLabel == -1 || centerLabel != prevSceneLabel) {
@@ -329,20 +346,14 @@ int main() {
 		log("Label " + std::to_string(label) + " サムネイル選定:", true);
 		for (const auto& cand : selected) {
 			log(" " + std::to_string(cand.frameIndex), true);
-		}
-
-		// topKThumbnailsなどのサムネイル候補を表示したい場合
-		auto thumbnails = seg.topKThumbnails;
-		while (!thumbnails.empty()) {
-			const ThumbnailCandidate& candidate = thumbnails.top();
-			if (candidate.frame.empty()) {
-				std::cerr << "Empty image at frameIndex: " << candidate.frameIndex << std::endl;
-				thumbnails.pop();
-				continue;
+			// サムネイル画像を表示
+			if (!cand.frame.empty()) {
+				cv::cvtColor(cand.frame, cand.frame, cv::COLOR_RGB2BGR);  // OpenCVのBGRをRGBに変換
+				cv::imshow("Thumbnail", cand.frame);
+				cv::waitKey(0);  // キー入力待ち
+			} else {
+				std::cerr << "Empty image at frameIndex: " << cand.frameIndex << std::endl;
 			}
-			cv::imshow("Thumbnail", candidate.frame);
-			cv::waitKey(0);
-			thumbnails.pop();
 		}
 	}
 
@@ -352,32 +363,37 @@ int main() {
 			+ " [" + std::to_string(seg.startFrameIndex) + "," + std::to_string(seg.endFrameIndex) + "]"
 			+ " (length=" + std::to_string(seg.length) + ")", true);
 
+		// priority_queue から vector に抜き出す
 		std::priority_queue<ThumbnailCandidate> thumbs = seg.topKThumbnails;
-		std::vector<float> scores;
+		std::vector<ThumbnailCandidate> thumbsVec;
 		while (!thumbs.empty()) {
-			const auto& cand = thumbs.top();
+			thumbsVec.push_back(thumbs.top());
+			thumbs.pop();
+		}
+
+		// スコア降順でsort（念のため明示的に！）
+		std::sort(thumbsVec.begin(), thumbsVec.end(),
+			[](const ThumbnailCandidate& a, const ThumbnailCandidate& b) {
+				return a.combinedScore() > b.combinedScore();
+			}
+		);
+
+		// ソートした上で表示
+		for (const auto& cand : thumbsVec) {
 			log("Frame " + std::to_string(cand.frameIndex)
 				+ ", DeepLearningScore=" + std::to_string(cand.deepLearningScore)
 				+ ", HiFreqScore=" + std::to_string(cand.highFrequencyScore)
 				+ ", 合成スコア=" + std::to_string(cand.combinedScore()), true);
-			scores.push_back(cand.combinedScore());
-			thumbs.pop();
-		}
-		// ソートの確認
-		for (size_t i = 1; i < scores.size(); ++i) {
-			if (scores[i] > scores[i - 1]) {
-				std::cout << "  ※警告：スコアが降順になっていません！" << std::endl;
-			}
 		}
 	}
 
 	// 動画全体のフレーム情報をlogに出力
-	for (const FrameData& frame : VideoFrameData) {
+	/*for (const FrameData& frame : VideoFrameData) {
 		log("フレーム " + std::to_string(frame.frameIndex) +
 			": シーンラベル = " + std::to_string(frame.sceneLabel) +
 			": シーンラベルの確率 = " + std::to_string(frame.sceneProb) +
 			": イベントラベルの確率の合計 = " + std::to_string(frame.eventProbsSum), true);
-	}
+	}*/
 
 	timerAll.stop();
 	closeLog();

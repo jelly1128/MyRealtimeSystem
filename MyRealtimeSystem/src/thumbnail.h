@@ -13,15 +13,15 @@ struct ThumbnailCandidate {
     float combinedScore() const {
         // 仮に平均で合成（実際はここを好きな式に変更可能！）
         // 例: return (deepLearningScore + highFrequencyScore) / 2.0;
-        // 例: return deepLearningScore * 0.7 + highFrequencyScore * 0.3;
-        // 実装時にここを調整！
-        return (deepLearningScore + highFrequencyScore) / 2.0f;
+        //return std::min(deepLearningScore, highFrequencyScore);
+        //return highFrequencyScore;
+        //return deepLearningScore;
+        return deepLearningScore * highFrequencyScore;
     }
 
     // priority_queue用の比較演算子
     bool operator<(const ThumbnailCandidate& o) const {
-        // priority_queueはデフォで「大きい順」にしたいのでこう書く
-        return combinedScore() < o.combinedScore();
+        return combinedScore() > o.combinedScore();
     }
 };
 
