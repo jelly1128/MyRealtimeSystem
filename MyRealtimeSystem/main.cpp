@@ -11,7 +11,7 @@
 
 int main() {
 	// ログの初期化
-	initLog(DEBUG_LOG_FILE_PATH);
+	initLog(LOG_FILE_PATH);
 	log("プログラム開始", true);
 	TimeLogger timerAll("全体処理時間");
 
@@ -62,7 +62,7 @@ int main() {
 
 	//TimeLogger timerRead("フレーム読み込み");
 
-	//// 画像フォルダから読み込む
+	// 画像フォルダから読み込む
 	//std::vector<cv::Mat> frames;
 	//if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
 	//	log("フレームの読み込みに失敗しました。", true);
@@ -83,6 +83,8 @@ int main() {
 		cv::Mat processedFrame = preprocessFrameForTreatment(frame, INPUT_WIDTH, INPUT_HEIGHT);
 		processedFramesForTreatment.push_back(processedFrame);
 	}*/
+
+    //showFrames(processedFramesForTreatment, true);  // フレームを表示する関数を呼び出す（デバッグ）
 
 	/*std::vector<cv::Mat> processedFramesForOrgan;
 	for (cv::Mat& frame : frames) {
@@ -135,18 +137,22 @@ int main() {
 	//timerInference.stop();
 
 	// for debug
-    /*std::vector<std::vector<float>> treatmentProbabilities;
-	treatmentProbabilities = loadTreatmentProbabilitiesFromCSV(TREATMENT_OUTPUT_PROBS_CSV);*/
+    std::vector<std::vector<float>> treatmentProbabilities;
+	treatmentProbabilities = loadTreatmentProbabilitiesFromCSV(TREATMENT_OUTPUT_PROBS_CSV);
 	/*std::vector<int> organLabels;
 	organLabels = loadSingleLabelsFromCSV(ORGAN_OUTPUT_LABELS_CSV);*/
 
-	//std::cout << treatmentProbabilities.size() << " frames loaded." << std::endl;
+	std::cout << treatmentProbabilities.size() << " frames loaded." << std::endl;
 
 	//TimeLogger timerBinarize("バイナリ化");
 
     // 4. 処理系
 	// 推論結果のバイナリ化
-    //std::vector<std::vector<int>> treatmentLabels = binarizeProbabilities(treatmentProbabilities, 0.5);
+	/*std::vector<std::vector<int>> treatmentLabels;
+	for (const auto& probs : treatmentProbabilities) {
+		std::vector<int> binaryLabels = binarizeProbabilities(probs, NUM_CLASSES);
+		treatmentLabels.push_back(binaryLabels);
+	}*/
 
 	//timerBinarize.stop();
 
@@ -161,7 +167,7 @@ int main() {
 	//TimeLogger timerSW("スライディングウィンドウによるシーンラベル抽出");
 
 	// スライディングウィンドウを使用してシーンラベルを抽出
-	//std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
+	//std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabkaels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
 
 	/*if (!saveLabelsToCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV, treatmentSingleSceneLabels)) {
 		log("臓器分類の確率CSVの保存に失敗しました。", true);
@@ -175,13 +181,13 @@ int main() {
 	//timerSW.stop();
 
 	// for debug
-	std::vector<int> treatmentSingleSceneLabels;
-	treatmentSingleSceneLabels = loadSingleLabelsFromCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV);
+	//std::vector<int> treatmentSingleSceneLabels;
+	//treatmentSingleSceneLabels = loadSingleLabelsFromCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV);
 
-	std::cout << "シングルラベルのサイズ: " << treatmentSingleSceneLabels.size() << std::endl;
+	//std::cout << "シングルラベルのサイズ: " << treatmentSingleSceneLabels.size() << std::endl;
 
 	// タイムライン画像出力
-    if (!drawTimelineImage(treatmentSingleSceneLabels, 
+    /*if (!drawTimelineImage(treatmentSingleSceneLabels, 
 		TREATMENT_TIMELINE_IMAGE_PATH, 
 		NUM_SCENE_CLASSES,
 		TIMELINE_IMAGE_WIDTH,
@@ -191,7 +197,64 @@ int main() {
     }
     else {
         std::cout << "タイムライン画像を " << TREATMENT_TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
-    }
+    }*/
+
+	// for debug
+	// サムネイル選定の実施
+	// 動画全体のフレーム情報
+	std::vector<FrameData> VideoFrameData;
+
+	// スライディングウィンドウ用の状態（履歴と前回ラベル）
+	std::deque<std::vector<int>> windowSceneLabelBuffer;
+	std::deque<float> eventSumBuffer;
+	std::deque<int> frameIndexBuffer;
+	int prevSceneLabel = -1;
+	const int halfWindowSize = TREATMENT_SLIDING_WINDOW_SIZE / 2; // ウィンドウの半分のサイズ
+
+	std::cout << halfWindowSize << " frames for sliding window." << std::endl;
+
+	// 動画内の各フレームの推論デモ
+	for (int i = 0; i < treatmentProbabilities.size(); ++i) {
+		// 入力画像
+		//cv::Mat inputImage = frames[i];
+		// 処置確率
+		std::vector<float> treatmentProb = treatmentProbabilities[i];
+
+		// 情報更新
+		FrameData frameData;
+		frameData.frameIndex = i;
+		frameData.eventProbsSum = std::accumulate(treatmentProb.begin() + NUM_SCENE_CLASSES, treatmentProb.end(), 0.0f);
+
+		VideoFrameData.push_back(frameData);
+
+		// スライディングウィンドウを使用してシーンラベルを抽出
+		std::vector<int> treatmentBinaryLabels = binarizeProbabilities(treatmentProb, 0.5);
+		std::vector<int> sceneBinaryLabel(treatmentBinaryLabels.begin(), treatmentBinaryLabels.begin() + NUM_SCENE_CLASSES);
+
+		// 3. スライディングウィンドウバッファ更新
+		windowSceneLabelBuffer.push_back(sceneBinaryLabel);
+		if (windowSceneLabelBuffer.size() > TREATMENT_SLIDING_WINDOW_SIZE) {
+			windowSceneLabelBuffer.pop_front();
+		} else if (windowSceneLabelBuffer.size() < TREATMENT_SLIDING_WINDOW_SIZE) {
+			// ウィンドウサイズに満たない場合
+			continue;
+		}
+
+		auto windowCenterLabel = processSceneLabelSlidingWindow(windowSceneLabelBuffer, prevSceneLabel);
+
+		if (windowCenterLabel.has_value()) {
+			VideoFrameData[i - halfWindowSize].sceneLabel = windowCenterLabel.value();
+			prevSceneLabel = windowCenterLabel.value();
+		}
+	}
+
+	// 動画全体のフレーム情報をlogに出力
+	for (const FrameData& frame : VideoFrameData) {
+		log("フレーム " + std::to_string(frame.frameIndex) +
+			": シーンラベル = " + std::to_string(frame.sceneLabel) +
+			": シーンラベルの確率 = " + std::to_string(frame.sceneProb) +
+			": イベントラベルの確率の合計 = " + std::to_string(frame.eventProbsSum), true);
+	}
 
 	timerAll.stop();
 	closeLog();

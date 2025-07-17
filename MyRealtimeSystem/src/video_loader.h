@@ -39,4 +39,7 @@ cv::Mat preprocessFrameForOrgan(
 );
 
 // 読み込んだ画像を表示する(デバック用)
-void showFrames(const std::vector<cv::Mat>& frames);
+void showFrames(
+	const std::vector<cv::Mat>& frames,
+	bool convertColor = false
+);

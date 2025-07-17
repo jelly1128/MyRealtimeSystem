@@ -1,5 +1,7 @@
 ﻿#include "sliding_window.h"
-#include <algorithm>
+#include <vector>
+#include <deque>
+#include <optional>
 
 std::vector<int> slidingWindowExtractSceneLabels(
     const std::vector<std::vector<int>>& treatmentLabels,
@@ -19,7 +21,7 @@ std::vector<int> slidingWindowExtractSceneLabels(
     int halfWin = windowSize / 2;      // ウィンドウの中央位置
 
     int prevLabel = -1; // 直前のラベルを保持（同点多数決時に使用、最初は未定義）
-	
+
     // スライディングウィンドウを左から右にずらしていく
     for (int start = 0; start <= numFrames - windowSize; start += step) {
         std::vector<int> classCounts(numSceneClasses, 0);
@@ -57,4 +59,42 @@ std::vector<int> slidingWindowExtractSceneLabels(
     }
 
     return sceneSingleLabels;
+}
+
+
+// スライディングウィンドウを使用してシーンラベルを1つにまとめる関数
+std::optional<int> processSceneLabelSlidingWindow(
+    const std::deque<std::vector<int>>& windowSceneLabelBuffer,
+	int prevSceneLabel
+) {
+	// シーンクラス数を取得
+	int numSceneClasses = windowSceneLabelBuffer.front().size();
+    std::vector<int> classCounts(numSceneClasses, 0);
+
+    // 現ウィンドウ内で各クラスの合計値を計算
+    for (int i = 0; i < windowSceneLabelBuffer.size(); ++i) {
+        for (int c = 0; c < numSceneClasses; ++c) {
+            classCounts[c] += windowSceneLabelBuffer[i][c];
+        }
+    }
+
+    // 最多クラスを抽出
+    int maxCount = *std::max_element(classCounts.begin(), classCounts.end());
+    std::vector<int> maxIndices;
+    for (int c = 0; c < numSceneClasses; ++c) {
+        if (classCounts[c] == maxCount) maxIndices.push_back(c);
+    }
+
+    int decidedLabel;
+    if (maxIndices.size() == 1) {
+        decidedLabel = maxIndices[0];  // 明確な多数決
+    }
+    else if (prevSceneLabel != -1) {
+        decidedLabel = prevSceneLabel; // 同点 → 前回のラベルを再利用
+    }
+    else {
+        decidedLabel = 0;  // 初回など → 白色光
+    }
+
+    return decidedLabel;
 }

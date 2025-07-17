@@ -203,10 +203,16 @@ cv::Mat preprocessFrameForOrgan(
 }
 
 
-// 読み込んだ画像を表示する(デバック用)
-void showFrames(const std::vector<cv::Mat>& frames) {
+// 読み込んだ画像を表示する(デバッグ用)
+// convertColor: trueの場合、BGR→RGB変換を行う
+void showFrames(const std::vector<cv::Mat>& frames, bool convertColor) {
     for (size_t i = 0; i < frames.size(); ++i) {
-        cv::imshow("Frame", frames[i]);
+        cv::Mat img = frames[i];
+        if (convertColor) {
+            cv::cvtColor(frames[i], img, cv::COLOR_BGR2RGB);
+        }
+
+        cv::imshow("Frame", img);
         int key = cv::waitKey(500); // 500msごとに次の画像へ
         if (key == 27) break; // ESCキーで中断
     }

@@ -12,8 +12,8 @@ const std::string ORGAN_MODEL_PATH = "models/umetsu_model.pt";
 const std::string VIDEO_PATH = "D:/M1/動画とか/000001-002.mov";
 
 // 画像フォルダから取得場合のフォルダパス
-//const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
-const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
+const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
+//const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
 const std::string VIDEO_FOLDER_PATH = std::string("images/") + VIDEO_NAME + "/"; // 動画フォルダパス
 
 // ログ用のファイルパス
@@ -89,10 +89,11 @@ struct FrameLabel {
 };
 
 // サムネイル選定やスコア処理用のスコア付き構造体（処理中間用）
+// 1フレーム単位のデータを保持
 struct FrameData {
-    int frameIndex;                               // フレーム番号
-    std::vector<float> treatment_probabilities;   // 推論スコア（15クラス）
-    int swLabel;                                  // 平滑化されたラベル
-    float S_target = 0.0f;                        // ターゲットスコア
-    float S_event = 0.0f;                         // イベントスコア
+    int frameIndex;                               // フレーム番号(デバッグ専用)
+    std::vector<float> treatmentProbabilities;   // 推論スコア（15クラス）
+    int sceneLabel = -1;                                  // 平滑化されたラベル
+    float sceneProb = 0.0f;                        // シーンクラスの確率
+    float eventProbsSum = 0.0f;                         // イベントクラスの確率の合計
 };

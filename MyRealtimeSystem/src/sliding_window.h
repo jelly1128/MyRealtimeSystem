@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <deque>
+#include <optional>
 
 /**
  * @brief スライディングウィンドウでシーンラベルを多数決抽出（同点は直前ラベル）
@@ -18,4 +20,10 @@ std::vector<int> slidingWindowExtractSceneLabels(
     int windowSize,
     int step,
     int numSceneClasses
+);
+
+
+std::optional<int> processSceneLabelSlidingWindow(
+    const std::deque<std::vector<int>>& windowSceneLabelBuffer,
+    int prevSceneLabel
 );
