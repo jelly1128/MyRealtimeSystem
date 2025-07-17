@@ -1,6 +1,7 @@
 #include "thumbnail.h"
 
-double computeHighFrequencyEnergy(const cv::Mat& inputImg) {
+
+float computeHighFrequencyEnergy(const cv::Mat& inputImg) {
     cv::Mat gray;
     if (inputImg.channels() == 3) {
         cv::cvtColor(inputImg, gray, cv::COLOR_BGR2GRAY);
@@ -49,3 +50,28 @@ double computeHighFrequencyEnergy(const cv::Mat& inputImg) {
     return totalEnergy > 0 ? highFreqEnergy / totalEnergy : 0.0;
 }
 
+
+std::vector<ThumbnailCandidate> selectThumbnailsWithFrameGap(
+    std::priority_queue<ThumbnailCandidate> topKThumbs,
+    int frameGap,
+    int topK
+) {
+    std::vector<ThumbnailCandidate> selected;
+    std::set<int> usedIndices;
+    while (!topKThumbs.empty() && selected.size() < topK) {
+        const auto& cand = topKThumbs.top();
+        bool tooClose = false;
+        for (int used : usedIndices) {
+            if (std::abs(cand.frameIndex - used) < frameGap) {
+                tooClose = true;
+                break;
+            }
+        }
+        if (!tooClose) {
+            selected.push_back(cand);
+            usedIndices.insert(cand.frameIndex);
+        }
+        topKThumbs.pop();
+    }
+    return selected;
+}

@@ -54,6 +54,10 @@ constexpr int ORGAN_SLIDING_WINDOW_SIZE = 60;       // スライディングウ�
 constexpr int TIMELINE_IMAGE_WIDTH = 1000;          // タイムライン画像の幅
 constexpr int TIMELINE_IMAGE_HEIGHT = 50;         // タイムライン画像の高さ
 
+// サムネイル画像選定のパラメータ
+const int THUMNAIL_FRAME_GAP = 15;
+const int THUMNAIL_TOP_K = 20;
+
 // ラベル種別定義
 enum class OrganLabel {
 	OUTSIDE = 0,           // 体外
@@ -97,35 +101,4 @@ struct FrameData {
     int sceneLabel = -1;                         // 平滑化されたラベル
     float sceneProb = 0.0f;                      // シーンクラスの確率
     float eventProbsSum = 0.0f;                  // イベントクラスの確率の合計
-};
-
-
-struct ThumbnailCandidate {
-    int frameIndex;             // フレーム番号
-    cv::Mat frame;              // フレーム画像
-	float deepLearningScore;    // 深層学習モデルによるスコア
-	float highFrequencyScore;   // 高周波エネルギーによるスコア
-
-    // 合成スコア計算式をメンバ関数で定義
-    float combinedScore() const {
-        // 仮に平均で合成（実際はここを好きな式に変更可能！）
-        // 例: return (deepLearningScore + highFrequencyScore) / 2.0;
-        // 例: return deepLearningScore * 0.7 + highFrequencyScore * 0.3;
-        // 実装時にここを調整！
-        return (deepLearningScore + highFrequencyScore) / 2.0f;
-    }
-
-    // priority_queue用の比較演算子
-    bool operator<(const ThumbnailCandidate& o) const {
-        // priority_queueはデフォで「大きい順」にしたいのでこう書く
-        return combinedScore() < o.combinedScore();
-    }
-};
-
-
-struct VideoSegment {
-	int startFrameIndex = -1;                               // セグメントの開始フレームインデックス
-	int endFrameIndex = -1;                                 // セグメントの終了フレームインデックス
-	int length = 0;                                  // セグメントの長さ（フレーム数）
-	std::priority_queue<ThumbnailCandidate> topKThumbnails; // このセグメントの上位K個のサムネイル候補
 };

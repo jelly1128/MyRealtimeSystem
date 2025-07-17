@@ -63,15 +63,15 @@ int main() {
 	//TimeLogger timerRead("フレーム読み込み");
 
 	// 画像フォルダから読み込む
-	//std::vector<cv::Mat> frames;
-	//if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
-	//	log("フレームの読み込みに失敗しました。", true);
-	//	closeLog();
-	//} else {
-	//	log("フレームの読み込みに成功しました。", true);
-	//	log("読み込んだフレーム数: " + std::to_string(frames.size()), true);
-	//	//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
-	//}
+	std::vector<cv::Mat> frames;
+	if (!loadFramesFromDirectory(VIDEO_FOLDER_PATH, frames)) {
+		log("フレームの読み込みに失敗しました。", true);
+		closeLog();
+	} else {
+		log("フレームの読み込みに成功しました。", true);
+		log("読み込んだフレーム数: " + std::to_string(frames.size()), true);
+		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
+	}
 
 	//timerRead.stop();
 
@@ -204,7 +204,6 @@ int main() {
 	// 動画全体のフレーム情報
 	std::vector<FrameData> VideoFrameData;
 	std::map<int, std::priority_queue<ThumbnailCandidate>> topKThumbnails;
-	const int TOP_K = 20;  // 上位何枚を取得するか
 
 	// 今連続中の区間
 	std::map<int, VideoSegment> currentSegment;
@@ -216,13 +215,15 @@ int main() {
 	std::deque<std::vector<int>> windowSceneLabelBuffer;
 	int prevSceneLabel = -1;
 	const int halfWindowSize = TREATMENT_SLIDING_WINDOW_SIZE / 2; // ウィンドウの半分のサイズ
+	std::unordered_map<int, cv::Mat> windowFrameBuffer; // (frameIndex, image)のペア
+	std::deque<int> windowIndices;
 
 	std::cout << halfWindowSize << " frames for sliding window." << std::endl;
 
 	// 動画内の各フレームの推論デモ
 	for (int i = 0; i < treatmentProbabilities.size(); ++i) {
 		// 入力画像
-		//cv::Mat inputImage = frames[i];
+		cv::Mat inputImage = frames[i];
 		// 処置確率
 		std::vector<float> treatmentProb = treatmentProbabilities[i];
 
@@ -240,6 +241,17 @@ int main() {
 
 		// スライディングウィンドウバッファ更新
 		windowSceneLabelBuffer.push_back(sceneBinaryLabel);
+		windowFrameBuffer[i] = inputImage.clone();
+		windowIndices.push_back(i);
+
+		std::cout << "frame " << std::to_string(i) << " : " << windowFrameBuffer.size() << " frames in window buffer. " << std::to_string(windowIndices.front()) << ": frame size" << std::endl;
+
+		if (windowIndices.size() > TREATMENT_SLIDING_WINDOW_SIZE) {
+			int oldestIndex = windowIndices.front();
+			windowIndices.pop_front();
+			windowFrameBuffer.erase(oldestIndex); // 古いフレームを削除
+		}
+		
 		if (windowSceneLabelBuffer.size() > TREATMENT_SLIDING_WINDOW_SIZE) {
 			windowSceneLabelBuffer.pop_front();
 		} else if (windowSceneLabelBuffer.size() < TREATMENT_SLIDING_WINDOW_SIZE) {
@@ -247,7 +259,9 @@ int main() {
 			continue;
 		}
 
-		// スライディングウィンドウの適用
+
+
+		// スライディングウィンドウの適用により、中心フレームのシーンラベルを決定
 		auto windowCenterLabel = processSceneLabelSlidingWindow(windowSceneLabelBuffer, prevSceneLabel);
 
 		if (windowCenterLabel.has_value()) {
@@ -263,7 +277,7 @@ int main() {
 			// --- 動画セグメントの更新・サムネイル管理の追加 ----
 			ThumbnailCandidate candidate;
 			candidate.frameIndex = centerIndex;
-			//candidate.frame = frames[centerIndex].clone();  // フレーム画像を保持（必要なら）
+			candidate.frame = windowFrameBuffer.find(centerIndex)->second.clone();  // ウィンドウ内のフレーム画像
 			candidate.deepLearningScore = VideoFrameData[centerIndex].sceneProb - VideoFrameData[centerIndex].eventProbsSum;  // シーンラベルの確率をスコアとして使用
 			candidate.highFrequencyScore = 0.0f;  // 高周波エネルギーのスコアは後で計算
 
@@ -274,6 +288,7 @@ int main() {
 					if (currentSegment[prevSceneLabel].length > longestSegment[prevSceneLabel].length) {
 						longestSegment[prevSceneLabel] = currentSegment[prevSceneLabel];
 					}
+					currentSegment.clear();  // 現在のセグメントをクリア
 				}
 				// 新しいラベル区間を開始
 				VideoSegment newSegment;
@@ -288,7 +303,7 @@ int main() {
 				currentSegment[centerLabel].length++;
 				currentSegment[centerLabel].topKThumbnails.push(candidate);
 				// サムネイル候補がTOP_Kを超えた場合、最小値を削除
-				if (currentSegment[centerLabel].topKThumbnails.size() > TOP_K) {
+				if (currentSegment[centerLabel].topKThumbnails.size() > THUMNAIL_TOP_K) {
 					currentSegment[centerLabel].topKThumbnails.pop();
 				}
 			}
@@ -303,11 +318,57 @@ int main() {
 		}
 	}
 
+	std::map<int, std::vector<ThumbnailCandidate>> finalThumbnailsPerLabel;
+
+	for (const auto& [label, seg] : longestSegment) {
+		// seg.topKThumbnailsは区間内スコア順priority_queue
+		auto selected = selectThumbnailsWithFrameGap(seg.topKThumbnails, THUMNAIL_FRAME_GAP, THUMNAIL_TOP_K);
+		finalThumbnailsPerLabel[label] = selected;
+
+		// デバッグ用出力
+		log("Label " + std::to_string(label) + " サムネイル選定:", true);
+		for (const auto& cand : selected) {
+			log(" " + std::to_string(cand.frameIndex), true);
+		}
+
+		// topKThumbnailsなどのサムネイル候補を表示したい場合
+		auto thumbnails = seg.topKThumbnails;
+		while (!thumbnails.empty()) {
+			const ThumbnailCandidate& candidate = thumbnails.top();
+			if (candidate.frame.empty()) {
+				std::cerr << "Empty image at frameIndex: " << candidate.frameIndex << std::endl;
+				thumbnails.pop();
+				continue;
+			}
+			cv::imshow("Thumbnail", candidate.frame);
+			cv::waitKey(0);
+			thumbnails.pop();
+		}
+	}
+
 	log("=== ラベルごとの最長区間 ===", true);
 	for (const auto& [label, seg] : longestSegment) {
 		log("Label " + std::to_string(label)
 			+ " [" + std::to_string(seg.startFrameIndex) + "," + std::to_string(seg.endFrameIndex) + "]"
 			+ " (length=" + std::to_string(seg.length) + ")", true);
+
+		std::priority_queue<ThumbnailCandidate> thumbs = seg.topKThumbnails;
+		std::vector<float> scores;
+		while (!thumbs.empty()) {
+			const auto& cand = thumbs.top();
+			log("Frame " + std::to_string(cand.frameIndex)
+				+ ", DeepLearningScore=" + std::to_string(cand.deepLearningScore)
+				+ ", HiFreqScore=" + std::to_string(cand.highFrequencyScore)
+				+ ", 合成スコア=" + std::to_string(cand.combinedScore()), true);
+			scores.push_back(cand.combinedScore());
+			thumbs.pop();
+		}
+		// ソートの確認
+		for (size_t i = 1; i < scores.size(); ++i) {
+			if (scores[i] > scores[i - 1]) {
+				std::cout << "  ※警告：スコアが降順になっていません！" << std::endl;
+			}
+		}
 	}
 
 	// 動画全体のフレーム情報をlogに出力
