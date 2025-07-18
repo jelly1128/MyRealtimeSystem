@@ -58,6 +58,7 @@ constexpr int TIMELINE_IMAGE_HEIGHT = 50;         // タイムライン画像の
 // サムネイル画像選定のパラメータ
 const int THUMNAIL_FRAME_GAP = 15;
 const int THUMNAIL_TOP_K = 20;
+const std::string TREATMENT_THUMNAIL_IMAGE_PATH = std::string("outputs/") + VIDEO_NAME + "/" + VIDEO_NAME + "_thumnail";
 
 // ラベル種別定義
 enum class OrganLabel {

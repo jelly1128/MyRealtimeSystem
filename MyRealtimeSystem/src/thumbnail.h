@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <vector>
 #include <opencv2/opencv.hpp>
 
 
@@ -40,4 +41,12 @@ std::vector<ThumbnailCandidate> selectThumbnailsWithFrameGap(
     std::priority_queue<ThumbnailCandidate> topKThumbs,
     int frameGap,
     int topK
+);
+
+
+// サムネイルをタイル状に合成して1枚の画像にする
+void visualizeThumbnailsPerLabel(
+    const std::map<int, std::vector<ThumbnailCandidate>>& thumbsPerLabel,
+    const std::string& savePath,
+    int thumbWidth = 160, int thumbHeight = 120, int gridCols = 4
 );
