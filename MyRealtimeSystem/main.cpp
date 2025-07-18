@@ -25,9 +25,9 @@ int main() {
 		log("モデルの読み込みに失敗しました。", true);
 		closeLog();
         return -1;
-    }*/
+    }
 
-	//timerLoad.stop();
+	timerLoad.stop();*/
 
 	//TimeLogger timerRead("フレーム読み込み");
 
@@ -60,7 +60,7 @@ int main() {
 		frameOrganTensors.push_back(frameTensor);
 	}*/
 
-	//TimeLogger timerRead("フレーム読み込み");
+	TimeLogger timerRead("フレーム読み込み");
 
 	// 画像フォルダから読み込む
 	std::vector<cv::Mat> frames;
@@ -73,9 +73,9 @@ int main() {
 		//showFrames(frames);  // フレームを表示する関数を呼び出す（デバッグ）
 	}
 
-	//timerRead.stop();
+	timerRead.stop();
 
-	//TimeLogger timerPreprocess("フレーム前処理");
+	TimeLogger timerPreprocess("フレーム前処理");
 
 	// 画像前処理
 	std::vector<cv::Mat> processedFramesForTreatment;
@@ -83,27 +83,6 @@ int main() {
 		cv::Mat processedFrame = preprocessFrameForTreatment(frame, INPUT_WIDTH, INPUT_HEIGHT);
 		processedFramesForTreatment.push_back(processedFrame);
 	}
-
-	//std::ofstream ofs(HIGH_FREQ_CSV);
-	//if (!ofs.is_open()) {
-	//	std::cerr << "Failed to open output CSV file." << std::endl;
-	//	return 0;
-	//}
-
-	//// ヘッダー
-	//ofs << "frameIndex,highFrequencyScore\n";
-	//// 処理と保存
-	//int frameIndex = 0;
-	//for (const cv::Mat& frame : processedFramesForTreatment) {
-	//	// 高周波エネルギーの算出
-	//	float highFrequencyScore = computeHighFrequencyEnergy(frame);
-	//	// CSVに保存
-	//	ofs << frameIndex << "," << highFrequencyScore << "\n";
-
-	//	frameIndex++;
-	//}
-
-	//ofs.close();
 
     //showFrames(processedFramesForTreatment, true);  // フレームを表示する関数を呼び出す（デバッグ）
 
@@ -115,7 +94,7 @@ int main() {
 
 	//timerPreprocess.stop();
 
-	//TimeLogger timerInference("処置検出の推論");
+	//TimeLogger timerTreatmentInference("処置検出の推論");
 
 	// 3. 推論
 	// 処置検出の推論の実行
@@ -123,6 +102,10 @@ int main() {
     for (const cv::Mat& processedFrame : processedFramesForTreatment) {
 		treatmentProbabilities.push_back(runTreatmentInference(processedFrame, treatmentModel));
 	}*/
+
+	//timerTreatmentInference.stop();
+
+	//TimeLogger timerOrganInference("臓器分類の推論");
 
 	// 隠れ状態とセル状態の初期化
 	//torch::Tensor h_0 = torch::zeros({ 2, 1, 128 }, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA));
@@ -138,30 +121,31 @@ int main() {
 
 
 	// 推論結果の保存
-	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
-		log("確率CSVの保存に失敗しました。", true);
-		closeLog();
-		return -1;
-	} else {
-		log("推論確率を " + TREATMENT_OUTPUT_PROBS_CSV + " に保存しました。", true);
-	}*/
+	//if (!saveMatrixToCSV(TREATMENT_OUTPUT_PROBS_CSV, treatmentProbabilities, "prob_")) {
+	//	log("確率CSVの保存に失敗しました。", true);
+	//	closeLog();
+	//	return -1;
+	//} else {
+	//	log("推論確率を " + TREATMENT_OUTPUT_PROBS_CSV + " に保存しました。", true);
+	//}
 
-	/*if (!saveLabelsToCSV(ORGAN_OUTPUT_LABELS_CSV, organLabels)) {
-		log("臓器分類のラベルCSVの保存に失敗しました。", true);
-		closeLog();
-		return -1;
-	}
-	else {
-		log("臓器分類の推論ラベルを " + ORGAN_OUTPUT_LABELS_CSV + " に保存しました。", true);
-	}*/
+	//if (!saveLabelsToCSV(ORGAN_OUTPUT_LABELS_CSV, organLabels)) {
+	//	log("臓器分類のラベルCSVの保存に失敗しました。", true);
+	//	closeLog();
+	//	return -1;
+	//}
+	//else {
+	//	log("臓器分類の推論ラベルを " + ORGAN_OUTPUT_LABELS_CSV + " に保存しました。", true);
+	//}
 
-	//timerInference.stop();
+	//timerOrganInference.stop();
+	
 
 	// for debug
     std::vector<std::vector<float>> treatmentProbabilities;
 	treatmentProbabilities = loadTreatmentProbabilitiesFromCSV(TREATMENT_OUTPUT_PROBS_CSV);
-	/*std::vector<int> organLabels;
-	organLabels = loadSingleLabelsFromCSV(ORGAN_OUTPUT_LABELS_CSV);*/
+	//std::vector<int> organLabels;
+	//organLabels = loadSingleLabelsFromCSV(ORGAN_OUTPUT_LABELS_CSV);
 
 	//std::cout << treatmentProbabilities.size() << " frames loaded." << std::endl;
 
@@ -169,68 +153,63 @@ int main() {
 
     // 4. 処理系
 	// 推論結果のバイナリ化
-	/*std::vector<std::vector<int>> treatmentLabels;
-	for (const auto& probs : treatmentProbabilities) {
-		std::vector<int> binaryLabels = binarizeProbabilities(probs, BINARY_THRESHOLD);
-		treatmentLabels.push_back(binaryLabels);
-	}*/
+	//std::vector<std::vector<int>> treatmentLabels;
+	//for (const auto& probs : treatmentProbabilities) {
+	//	std::vector<int> binaryLabels = binarizeProbabilities(probs, BINARY_THRESHOLD);
+	//	treatmentLabels.push_back(binaryLabels);
+	//}
 
 	//timerBinarize.stop();
 
-	/*if (!saveMatrixToCSV(TREATMENT_OUTPUT_LABELS_CSV, treatmentLabels, "label_")) {
-		log("バイナリ化された処置ラベルの保存に失敗しました。", true);
-		closeLog();
-		return -1;
-	} else {
-		log("バイナリ化された処置ラベルを " + TREATMENT_OUTPUT_LABELS_CSV + " に保存しました。", true);
-	}*/
+	//if (!saveMatrixToCSV(TREATMENT_OUTPUT_LABELS_CSV, treatmentLabels, "label_")) {
+	//	log("バイナリ化された処置ラベルの保存に失敗しました。", true);
+	//	closeLog();
+	//	return -1;
+	//} else {
+	//	log("バイナリ化された処置ラベルを " + TREATMENT_OUTPUT_LABELS_CSV + " に保存しました。", true);
+	//}
 
 	//TimeLogger timerSW("スライディングウィンドウによるシーンラベル抽出");
 
 	// スライディングウィンドウを使用してシーンラベルを抽出
-	/*std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
+	//std::vector<int> treatmentSingleSceneLabels = slidingWindowExtractSceneLabels(treatmentLabels, TREATMENT_SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STEP, NUM_SCENE_CLASSES);
 
-	if (!saveLabelsToCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV, treatmentSingleSceneLabels)) {
-		log("スライディングウィンドウ適用後の処置ラベルの保存に失敗しました。", true);
-		closeLog();
-		return -1;
-	}
-	else {
-		log("スライディングウィンドウ適用後の処置ラベルを " + TREATMENT_OUTPUT_SCENE_LABELS_CSV + " に保存しました。", true);
-	}*/
+	//if (!saveLabelsToCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV, treatmentSingleSceneLabels)) {
+	//	log("スライディングウィンドウ適用後の処置ラベルの保存に失敗しました。", true);
+	//	closeLog();
+	//	return -1;
+	//}
+	//else {
+	//	log("スライディングウィンドウ適用後の処置ラベルを " + TREATMENT_OUTPUT_SCENE_LABELS_CSV + " に保存しました。", true);
+	//}
 
 	//timerSW.stop();
 
 	// for debug
-	//std::vector<int> treatmentSingleSceneLabels;
-	//treatmentSingleSceneLabels = loadSingleLabelsFromCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV);
+	/*std::vector<int> treatmentSingleSceneLabels;
+	treatmentSingleSceneLabels = loadSingleLabelsFromCSV(TREATMENT_OUTPUT_SCENE_LABELS_CSV);*/
 
 	//std::cout << "シングルラベルのサイズ: " << treatmentSingleSceneLabels.size() << std::endl;
 
 	// タイムライン画像出力
-    /*if (!drawTimelineImage(treatmentSingleSceneLabels, 
-		TREATMENT_TIMELINE_IMAGE_PATH, 
-		NUM_SCENE_CLASSES,
-		TIMELINE_IMAGE_WIDTH,
-		TIMELINE_IMAGE_HEIGHT)
-		) {
-        std::cerr << "タイムライン画像の出力に失敗しました。" << std::endl;
-    }
-    else {
-        std::cout << "タイムライン画像を " << TREATMENT_TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
-    }*/
+  //  if (!drawTimelineImage(treatmentSingleSceneLabels, 
+		//TREATMENT_TIMELINE_IMAGE_PATH, 
+		//NUM_SCENE_CLASSES,
+		//TIMELINE_IMAGE_WIDTH,
+		//TIMELINE_IMAGE_HEIGHT)
+		//) {
+  //      std::cerr << "タイムライン画像の出力に失敗しました。" << std::endl;
+  //  }
+  //  else {
+  //      std::cout << "タイムライン画像を " << TREATMENT_TIMELINE_IMAGE_PATH << " に保存しました。" << std::endl;
+  //  }
 
 	
 	// for debug
 	// サムネイル選定の実施
-	// 動画全体のフレーム情報
-	std::vector<FrameData> VideoFrameData;
-
-	// 今連続中の区間
-	std::map<int, VideoSegment> currentSegment;
-
-	// これまでで最長だった区間
-	std::map<int, VideoSegment> longestSegment;
+	std::vector<FrameData> VideoFrameData;      // 動画全体のフレーム情報
+	std::map<int, VideoSegment> currentSegment; // 今連続中の区間
+	std::map<int, VideoSegment> longestSegment; // これまでで最長だった区間
 
 	// スライディングウィンドウ用の状態（履歴と前回ラベル）
 	std::deque<std::vector<int>> windowSceneLabelBuffer;
@@ -342,19 +321,19 @@ int main() {
 		finalThumbnailsPerLabel[label] = selected;
 
 		// デバッグ用出力
-		log("Label " + std::to_string(label) + " サムネイル選定:", true);
-		for (const auto& cand : selected) {
-			log(" " + std::to_string(cand.frameIndex), true);
-			// サムネイル画像を表示
-			if (!cand.frame.empty()) {
-				cv::Mat bgr;
-				cv::cvtColor(cand.frame, bgr, cv::COLOR_RGB2BGR);  // OpenCVのBGRをRGBに変換
-				cv::imshow("Thumbnail", bgr);
-				cv::waitKey(0);  // キー入力待ち
-			} else {
-				std::cerr << "Empty image at frameIndex: " << cand.frameIndex << std::endl;
-			}
-		}
+		//log("Label " + std::to_string(label) + " サムネイル選定:", true);
+		//for (const auto& cand : selected) {
+		//	log(" " + std::to_string(cand.frameIndex), true);
+		//	// サムネイル画像を表示
+		//	if (!cand.frame.empty()) {
+		//		cv::Mat bgr;
+		//		cv::cvtColor(cand.frame, bgr, cv::COLOR_RGB2BGR);  // OpenCVのBGRをRGBに変換
+		//		cv::imshow("Thumbnail", bgr);
+		//		cv::waitKey(0);  // キー入力待ち
+		//	} else {
+		//		std::cerr << "Empty image at frameIndex: " << cand.frameIndex << std::endl;
+		//	}
+		//}
 		visualizeThumbnailsPerLabel(finalThumbnailsPerLabel, TREATMENT_THUMNAIL_IMAGE_PATH, INPUT_WIDTH, INPUT_HEIGHT);
 	}
 

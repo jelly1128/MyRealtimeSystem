@@ -12,9 +12,6 @@ struct ThumbnailCandidate {
 
     // 合成スコア計算式をメンバ関数で定義
     float combinedScore() const {
-        // 仮に平均で合成（実際はここを好きな式に変更可能！）
-        // 例: return (deepLearningScore + highFrequencyScore) / 2.0;
-        //return std::min(deepLearningScore, highFrequencyScore);
         //return highFrequencyScore;
         //return deepLearningScore;
         return deepLearningScore * highFrequencyScore;
@@ -30,7 +27,7 @@ struct ThumbnailCandidate {
 struct VideoSegment {
     int startFrameIndex = -1;                               // セグメントの開始フレームインデックス
     int endFrameIndex = -1;                                 // セグメントの終了フレームインデックス
-    int length = 0;                                  // セグメントの長さ（フレーム数）
+    int length = 0;                                         // セグメントの長さ（フレーム数）
     std::priority_queue<ThumbnailCandidate> topKThumbnails; // このセグメントの上位K個のサムネイル候補
 };
 

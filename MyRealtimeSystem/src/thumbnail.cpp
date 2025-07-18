@@ -150,9 +150,9 @@ void visualizeThumbnailsPerLabel(
         cv::Mat tile = createThumbnailTile(thumbImgs, thumbWidth, thumbHeight, gridCols);
 
         // ‰æ‘œ•\Ž¦
-        std::string winName = "Label " + std::to_string(label) + " Thumbnails";
+        /*std::string winName = "Label " + std::to_string(label) + " Thumbnails";
         cv::imshow(winName, tile);
-        cv::waitKey(0);
+        cv::waitKey(0);*/
 
         // ‰æ‘œ•Û‘¶‚à‚Å‚«‚é
         cv::imwrite(savePath + "_label_" + std::to_string(label) + ".png", tile);
