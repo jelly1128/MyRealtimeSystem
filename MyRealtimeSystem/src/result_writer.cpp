@@ -1,5 +1,3 @@
-#include <fstream>
-#include <iomanip>
 #include "result_writer.h"
 
 template<typename T>

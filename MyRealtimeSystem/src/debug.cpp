@@ -1,10 +1,4 @@
 #include "debug.h"
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <mutex>
 
 namespace {
     std::ofstream g_logFile;

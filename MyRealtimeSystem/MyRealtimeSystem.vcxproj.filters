@@ -16,10 +16,19 @@
     <Filter Include="src">
       <UniqueIdentifier>{e556bdc2-e53d-4b2d-b89b-66883d5f10e2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{215dd7a1-9c0a-44be-a1da-8e416927ade1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\binarizer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\predictor.cpp">
       <Filter>src</Filter>
@@ -27,55 +36,55 @@
     <ClCompile Include="src\result_writer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\video_loader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\binarizer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\sliding_window.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\timeline_writer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\debug.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\thumbnail.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="config\config.h">
+    <ClCompile Include="src\thumbnail_slector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\timeline_writer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\video_loader.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\predictor.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\result_writer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\video_loader.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\binarizer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sliding_window.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\timeline_writer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\debug.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\thumbnail.h">
-      <Filter>src</Filter>
-    </ClInclude>
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
+    <ClInclude Include="include\binarizer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\predictor.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\result_writer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\sliding_window.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\thumbnail.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\thumbnail_selector.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\timeline_writer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\video_loader.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

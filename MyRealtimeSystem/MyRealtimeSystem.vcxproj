@@ -124,7 +124,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\cudnn\include;D:\SDK\opencv-build\install\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\cudnn\include;D:\SDK\opencv-build\install\include;C:\Users\User\source\repos\MyRealtimeSystem\MyRealtimeSystem\include</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
@@ -137,33 +137,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="config\config.h" />
-    <ClCompile Include="src\debug.cpp" />
     <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\binarizer.cpp" />
+    <ClCompile Include="src\debug.cpp" />
     <ClCompile Include="src\predictor.cpp" />
     <ClCompile Include="src\result_writer.cpp" />
     <ClCompile Include="src\sliding_window.cpp" />
+    <ClCompile Include="src\thumbnail.cpp" />
+    <ClCompile Include="src\thumbnail_slector.cpp" />
     <ClCompile Include="src\timeline_writer.cpp" />
     <ClCompile Include="src\video_loader.cpp" />
-    <ClCompile Include="src\thumbnail.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="frame_types.h" />
-    <ClInclude Include="label_definitions.h" />
-    <ClInclude Include="src\debug.h" />
-    <ClInclude Include="src\binarizer.h" />
-    <ClInclude Include="src\predictor.h" />
-    <ClInclude Include="src\result_writer.h" />
-    <ClInclude Include="src\sliding_window.h" />
-    <ClInclude Include="src\timeline_writer.h" />
-    <ClInclude Include="src\video_loader.h" />
-    <ClInclude Include="src\thumbnail.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="include\binarizer.h" />
+    <ClInclude Include="include\debug.h" />
+    <ClInclude Include="include\predictor.h" />
+    <ClInclude Include="include\result_writer.h" />
+    <ClInclude Include="include\sliding_window.h" />
+    <ClInclude Include="include\thumbnail.h" />
+    <ClInclude Include="include\thumbnail_selector.h" />
+    <ClInclude Include="include\timeline_writer.h" />
+    <ClInclude Include="include\video_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,10 @@
 #pragma once
-#include <vector>
+#include <opencv2/opencv.hpp>
+#include <array>
+#include <algorithm>
 #include <string>
+#include <vector>
+
 
 // ƒ^ƒCƒ€ƒ‰ƒCƒ“‰æ‘œ‚ð•`‰æ‚µ‚ÄPNG‚Æ‚µ‚Ä•Û‘¶
 bool drawTimelineImage(

@@ -1,13 +1,13 @@
-﻿#include "config/config.h"
-#include "src/video_loader.h"
-#include "src/predictor.h"
-#include "src/binarizer.h"
-#include "src/result_writer.h"
-#include "src/sliding_window.h"
-#include "src/timeline_writer.h"
-#include "src/thumbnail.h"
+﻿#include "config.h"
+#include "video_loader.h"
+#include "predictor.h"
+#include "binarizer.h"
+#include "result_writer.h"
+#include "sliding_window.h"
+#include "timeline_writer.h"
+#include "thumbnail.h"
 
-#include "src/debug.h"
+#include "debug.h"
 
 int main() {
 	// ログの初期化
@@ -217,6 +217,8 @@ int main() {
 	const int halfWindowSize = TREATMENT_SLIDING_WINDOW_SIZE / 2; // ウィンドウの半分のサイズ
 	std::unordered_map<int, cv::Mat> windowFrameBuffer; // (frameIndex, image)のペア
 	std::deque<int> windowIndices;
+
+	// 
 
 	// 動画内の各フレームの推論デモ
 	for (int i = 0; i < treatmentProbabilities.size(); ++i) {

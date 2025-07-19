@@ -2,6 +2,11 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <mutex>
 
 const std::string DEBUG_TREATMENT_PROBS_CSV = "outputs/20220105102425_4/20220105102425_4_treatment_probs.csv";
 const std::string DEBUG_LABELS_CSV = "outputs/debug/20211021093634_000001-001_labels.csv";

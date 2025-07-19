@@ -1,4 +1,4 @@
-#include "thumbnail.h"
+#include "../include/thumbnail.h"
 
 
 float computeHighFrequencyEnergy(const cv::Mat& inputImg) {

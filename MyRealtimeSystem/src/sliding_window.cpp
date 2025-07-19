@@ -1,7 +1,5 @@
 ﻿#include "sliding_window.h"
-#include <vector>
-#include <deque>
-#include <optional>
+
 
 std::vector<int> slidingWindowExtractSceneLabels(
     const std::vector<std::vector<int>>& treatmentLabels,

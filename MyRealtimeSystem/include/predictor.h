@@ -3,6 +3,7 @@
 #include <torch/script.h>
 #include <vector>
 
+
 /**
  * @brief PyTorchモデルを読み込む
  * @param[in] modelPath モデルファイルのパス

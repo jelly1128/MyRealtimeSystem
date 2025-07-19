@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <fstream>
+#include <iomanip>
+
 
 // 予測結果（各フレームの確率）をCSV形式で保存
 // Tは float や int に対応

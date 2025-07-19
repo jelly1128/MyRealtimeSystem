@@ -1,6 +1,4 @@
 #include "video_loader.h"
-#include <opencv2/opencv.hpp>
-#include <regex>
 
 
 // “®‰æ‚©‚çƒtƒŒ[ƒ€‚ğ“Ç‚İ‚ŞŠÖ”
