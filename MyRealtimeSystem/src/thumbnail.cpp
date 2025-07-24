@@ -1,6 +1,11 @@
 #include "../include/thumbnail.h"
 
 
+//float computeDeeplearningScore(
+//
+//)
+
+
 float computeHighFrequencyEnergy(const cv::Mat& inputImg) {
     cv::Mat gray;
     if (inputImg.channels() == 3) {
@@ -57,104 +62,104 @@ float computeHighFrequencyEnergy(const cv::Mat& inputImg) {
 }
 
 
-std::vector<ThumbnailCandidate> selectThumbnailsWithFrameGap(
-    std::priority_queue<ThumbnailCandidate> topKThumbs,
-    int frameGap,
-    int topK
-) {
-    std::vector<ThumbnailCandidate> allCandidates;
-    while (!topKThumbs.empty()) {
-        allCandidates.push_back(topKThumbs.top());
-        topKThumbs.pop();
-    }
-    // åµñßÇ…ç~èásort
-    std::sort(allCandidates.begin(), allCandidates.end(),
-        [](const ThumbnailCandidate& a, const ThumbnailCandidate& b) {
-            return a.combinedScore() > b.combinedScore();
-        });
+//std::vector<ThumbnailCandidate> selectThumbnailsWithFrameGap(
+//    std::priority_queue<ThumbnailCandidate> topKThumbs,
+//    int frameGap,
+//    int topK
+//) {
+//    std::vector<ThumbnailCandidate> allCandidates;
+//    while (!topKThumbs.empty()) {
+//        allCandidates.push_back(topKThumbs.top());
+//        topKThumbs.pop();
+//    }
+//    // åµñßÇ…ç~èásort
+//    std::sort(allCandidates.begin(), allCandidates.end(),
+//        [](const ThumbnailCandidate& a, const ThumbnailCandidate& b) {
+//            return a.combinedScore() > b.combinedScore();
+//        });
+//
+//    std::vector<ThumbnailCandidate> selected;
+//    std::set<int> usedIndices;
+//    for (const auto& cand : allCandidates) {
+//        if (selected.size() >= topK) break;
+//        bool tooClose = false;
+//        for (int used : usedIndices) {
+//            if (std::abs(cand.frameIndex - used) < frameGap) {
+//                tooClose = true;
+//                break;
+//            }
+//        }
+//        if (!tooClose) {
+//            selected.push_back(cand);
+//            usedIndices.insert(cand.frameIndex);
+//        }
+//    }
+//    return selected;
+//}
 
-    std::vector<ThumbnailCandidate> selected;
-    std::set<int> usedIndices;
-    for (const auto& cand : allCandidates) {
-        if (selected.size() >= topK) break;
-        bool tooClose = false;
-        for (int used : usedIndices) {
-            if (std::abs(cand.frameIndex - used) < frameGap) {
-                tooClose = true;
-                break;
-            }
-        }
-        if (!tooClose) {
-            selected.push_back(cand);
-            usedIndices.insert(cand.frameIndex);
-        }
-    }
-    return selected;
-}
 
-
-cv::Mat createThumbnailTile(
-    const std::vector<cv::Mat>& thumbs,
-    int thumbWidth = 160, int thumbHeight = 120,
-    int gridCols = 0, int gridRows = 0,
-    int margin = 8, cv::Scalar bgColor = cv::Scalar(240, 240, 240)
-) {
-    int numThumbs = thumbs.size();
-    if (gridCols == 0) gridCols = std::ceil(std::sqrt(numThumbs));
-    if (gridRows == 0) gridRows = std::ceil((float)numThumbs / gridCols);
-
-    int outWidth = thumbWidth * gridCols + margin * (gridCols + 1);
-    int outHeight = thumbHeight * gridRows + margin * (gridRows + 1);
-    cv::Mat canvas(outHeight, outWidth, CV_8UC3, bgColor);
-
-    for (int i = 0; i < numThumbs; ++i) {
-        int row = i / gridCols;
-        int col = i % gridCols;
-        int x = margin + col * (thumbWidth + margin);
-        int y = margin + row * (thumbHeight + margin);
-
-        if (!thumbs[i].empty()) {
-            cv::Mat thumbResized;
-            cv::resize(thumbs[i], thumbResized, cv::Size(thumbWidth, thumbHeight));
-            thumbResized.copyTo(canvas(cv::Rect(x, y, thumbWidth, thumbHeight)));
-        }
-    }
-    return canvas;
-}
+//cv::Mat createThumbnailTile(
+//    const std::vector<cv::Mat>& thumbs,
+//    int thumbWidth = 160, int thumbHeight = 120,
+//    int gridCols = 0, int gridRows = 0,
+//    int margin = 8, cv::Scalar bgColor = cv::Scalar(240, 240, 240)
+//) {
+//    int numThumbs = thumbs.size();
+//    if (gridCols == 0) gridCols = std::ceil(std::sqrt(numThumbs));
+//    if (gridRows == 0) gridRows = std::ceil((float)numThumbs / gridCols);
+//
+//    int outWidth = thumbWidth * gridCols + margin * (gridCols + 1);
+//    int outHeight = thumbHeight * gridRows + margin * (gridRows + 1);
+//    cv::Mat canvas(outHeight, outWidth, CV_8UC3, bgColor);
+//
+//    for (int i = 0; i < numThumbs; ++i) {
+//        int row = i / gridCols;
+//        int col = i % gridCols;
+//        int x = margin + col * (thumbWidth + margin);
+//        int y = margin + row * (thumbHeight + margin);
+//
+//        if (!thumbs[i].empty()) {
+//            cv::Mat thumbResized;
+//            cv::resize(thumbs[i], thumbResized, cv::Size(thumbWidth, thumbHeight));
+//            thumbResized.copyTo(canvas(cv::Rect(x, y, thumbWidth, thumbHeight)));
+//        }
+//    }
+//    return canvas;
+//}
 
 
 // ÉTÉÄÉlÉCÉãÇÉ^ÉCÉãèÛÇ…çáê¨ÇµÇƒ1ñáÇÃâÊëúÇ…Ç∑ÇÈ
-void visualizeThumbnailsPerLabel(
-    const std::map<int, std::vector<ThumbnailCandidate>>& thumbsPerLabel,
-	const std::string& savePath,
-    int thumbWidth, int thumbHeight, int gridCols
-) {
-    for (const auto& [label, thumbs] : thumbsPerLabel) {
-        std::vector<cv::Mat> thumbImgs;
-        for (const auto& cand : thumbs) {
-            if (!cand.frame.empty()) {
-                cv::Mat imgBGR;
-                if (cand.frame.type() == CV_32FC3) {
-                    cand.frame.convertTo(imgBGR, CV_8UC3, 255.0); // 0Å`1Å®0Å`255
-                }
-                else {
-                    imgBGR = cand.frame.clone();
-                }
-                // ïKóvÇ»ÇÁBGRïœä∑
-                cv::cvtColor(imgBGR, imgBGR, cv::COLOR_RGB2BGR);
-                thumbImgs.push_back(imgBGR);
-            }
-        }
-        if (thumbImgs.empty()) continue;
-
-        cv::Mat tile = createThumbnailTile(thumbImgs, thumbWidth, thumbHeight, gridCols);
-
-        // âÊëúï\é¶
-        /*std::string winName = "Label " + std::to_string(label) + " Thumbnails";
-        cv::imshow(winName, tile);
-        cv::waitKey(0);*/
-
-        // âÊëúï€ë∂Ç‡Ç≈Ç´ÇÈ
-        cv::imwrite(savePath + "_label_" + std::to_string(label) + ".png", tile);
-    }
-}
+//void visualizeThumbnailsPerLabel(
+//    const std::map<int, std::vector<ThumbnailCandidate>>& thumbsPerLabel,
+//	const std::string& savePath,
+//    int thumbWidth, int thumbHeight, int gridCols
+//) {
+//    for (const auto& [label, thumbs] : thumbsPerLabel) {
+//        std::vector<cv::Mat> thumbImgs;
+//        for (const auto& cand : thumbs) {
+//            if (!cand.frame.empty()) {
+//                cv::Mat imgBGR;
+//                if (cand.frame.type() == CV_32FC3) {
+//                    cand.frame.convertTo(imgBGR, CV_8UC3, 255.0); // 0Å`1Å®0Å`255
+//                }
+//                else {
+//                    imgBGR = cand.frame.clone();
+//                }
+//                // ïKóvÇ»ÇÁBGRïœä∑
+//                cv::cvtColor(imgBGR, imgBGR, cv::COLOR_RGB2BGR);
+//                thumbImgs.push_back(imgBGR);
+//            }
+//        }
+//        if (thumbImgs.empty()) continue;
+//
+//        cv::Mat tile = createThumbnailTile(thumbImgs, thumbWidth, thumbHeight, gridCols);
+//
+//        // âÊëúï\é¶
+//        /*std::string winName = "Label " + std::to_string(label) + " Thumbnails";
+//        cv::imshow(winName, tile);
+//        cv::waitKey(0);*/
+//
+//        // âÊëúï€ë∂Ç‡Ç≈Ç´ÇÈ
+//        cv::imwrite(savePath + "_label_" + std::to_string(label) + ".png", tile);
+//    }
+//}

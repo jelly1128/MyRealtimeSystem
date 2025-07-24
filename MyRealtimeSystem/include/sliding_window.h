@@ -1,29 +1,115 @@
-#pragma once
+ï»¿#pragma once
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <deque>
 #include <optional>
 
-/**
- * @brief ƒXƒ‰ƒCƒfƒBƒ“ƒOƒEƒBƒ“ƒhƒE‚ÅƒV[ƒ“ƒ‰ƒxƒ‹‚ğ‘½”Œˆ’Šoi“¯“_‚Í’¼‘Oƒ‰ƒxƒ‹j
- *
- * @param treatmentLabels ‘SƒNƒ‰ƒXi—áF15ƒNƒ‰ƒXj‚ÌƒtƒŒ[ƒ€‚²‚Æ‚Ìƒ‰ƒxƒ‹”z—ñiŠe—v‘f‚Íone-hot/multi-hot‘z’èj
- * @param windowSize ƒXƒ‰ƒCƒfƒBƒ“ƒOƒEƒBƒ“ƒhƒE‚ÌƒTƒCƒY
- * @param step ƒEƒBƒ“ƒhƒE‚ÌˆÚ“®ƒXƒeƒbƒv
- * @param numMainClasses ƒV[ƒ“ƒNƒ‰ƒX”i—áF6‚È‚ç0`5ƒNƒ‰ƒX‚ª‘ÎÛj
- * @return ŠeƒEƒBƒ“ƒhƒE’†‰›ƒtƒŒ[ƒ€‚²‚Æ‚ÌƒV[ƒ“ƒ‰ƒxƒ‹”z—ñi’[ƒtƒŒ[ƒ€‚Ío—Í‚µ‚È‚¢j
- *
- * @details ŠeƒEƒBƒ“ƒhƒE“à‚ÅƒV[ƒ“ƒNƒ‰ƒX‚²‚Æ‚Ì‡Œv’l‚ğWŒv‚µAÅ‘½ƒNƒ‰ƒX‚ğ‚»‚ÌƒEƒBƒ“ƒhƒE’†‰›ƒtƒŒ[ƒ€‚Ìƒ‰ƒxƒ‹‚Æ‚·‚éB
- *          •¡”ƒNƒ‰ƒX‚ª“¯”Å‘½‚Ìê‡‚Í’¼‘O‚Ìo—Íƒ‰ƒxƒ‹‚ğÌ—pBÅ‰‚ÌƒEƒBƒ“ƒhƒE‚Ì‚İÅ¬ƒCƒ“ƒfƒbƒNƒXƒNƒ‰ƒXB
- */
-std::vector<int> slidingWindowExtractSceneLabels(
-    const std::vector<std::vector<int>>& treatmentLabels,
-    int windowSize,
-    int step,
-    int numSceneClasses
-);
+
+// ã‚µãƒ ãƒã‚¤ãƒ«é¸å®šã‚„ã‚¹ã‚³ã‚¢å‡¦ç†ç”¨ã®ã‚¹ã‚³ã‚¢ä»˜ãæ§‹é€ ä½“ï¼ˆå‡¦ç†ä¸­é–“ç”¨ï¼‰
+// 1ãƒ•ãƒ¬ãƒ¼ãƒ å˜ä½ã®ãƒ‡ãƒ¼ã‚¿ã‚’ä¿æŒ
+struct FrameData {
+    int frameIndex;                              // ãƒ•ãƒ¬ãƒ¼ãƒ ç•ªå·(ãƒ‡ãƒãƒƒã‚°å°‚ç”¨)
+    std::vector<float> treatmentProbabilities;   // æ¨è«–ã‚¹ã‚³ã‚¢ï¼ˆ15ã‚¯ãƒ©ã‚¹ï¼‰
+	std::vector<int> sceneBinaryLabels;          // ãƒã‚¤ãƒŠãƒªåŒ–ã•ã‚ŒãŸã‚·ãƒ¼ãƒ³ãƒ©ãƒ™ãƒ«ï¼ˆ0ã€œ5ã®ä¸»ã‚¯ãƒ©ã‚¹ï¼‰
+    int sceneLabel = -1;                         // å¹³æ»‘åŒ–ã•ã‚ŒãŸãƒ©ãƒ™ãƒ«
+    float sceneProb = 0.0f;                      // ã‚·ãƒ¼ãƒ³ã‚¯ãƒ©ã‚¹ã®ç¢ºç‡
+    float eventProbsSum = 0.0f;                  // ã‚¤ãƒ™ãƒ³ãƒˆã‚¯ãƒ©ã‚¹ã®ç¢ºç‡ã®åˆè¨ˆ
+};
+
+
+// ã‚¹ãƒ©ã‚¤ãƒ‡ã‚£ãƒ³ã‚°ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å†…ã®ãƒ‡ãƒ¼ã‚¿ã‚’ç®¡ç†ã™ã‚‹ã‚¯ãƒ©ã‚¹
+class FrameWindow {
+private:
+    int windowSize;
+    int halfWindow;
+
+    std::deque<cv::Mat> imageBuffer;
+    std::deque<FrameData> dataBuffer;
+
+public:
+    FrameWindow(int windowSize);
+
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å†…ã«ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’è¿½åŠ 
+    void push(const cv::Mat& image, const FrameData& data);
+
+    // ä¸­å¿ƒãƒ•ãƒ¬ãƒ¼ãƒ ã®å–å¾—
+    const cv::Mat& getCenterImage() const;
+    const FrameData& getCenterData() const;
+
+    // æœ€æ–°ãƒ•ãƒ¬ãƒ¼ãƒ ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ï¼ˆãƒãƒƒãƒ•ã‚¡å…ˆé ­ï¼‰ã‚’å…ƒã«è¿”ã™
+    int getCenterFrameIndex() const;
+
+    // èª­ã¿å–ã‚Šå°‚ç”¨ã®å‚ç…§ã‚’è¿”ã™
+    const std::deque<FrameData>& getDataBuffer() const {
+        return dataBuffer;
+    }
+
+    // ãƒãƒƒãƒ•ã‚¡ã®ä¸­å¿ƒä½ç½®ï¼ˆwindowSize / 2ï¼‰
+    int getWindowOffset() const;
+
+    // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä¸­å¿ƒã®ã‚·ãƒ¼ãƒ³ãƒ©ãƒ™ãƒ«ã‚’è¨­å®š
+    void setCenterSceneLabel(int centerLabel);
+
+    // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å†…ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã®ã‚·ãƒ¼ãƒ³ãƒ©ãƒ™ãƒ«ã‚’å–å¾—
+    std::vector<std::vector<int>> getSceneLabels() const {
+        std::vector<std::vector<int>> labels;
+        for (const auto& data : dataBuffer) {
+            labels.push_back(data.sceneBinaryLabels);
+        }
+        return labels;
+    }
+
+    // ãƒãƒƒãƒ•ã‚¡ãŒæº€ãŸã•ã‚Œã¦ã„ã‚‹ã‹
+    bool isReady() const;
+
+	// ãƒãƒƒãƒ•ã‚¡ã®ã‚µã‚¤ã‚º(debug)
+    int size() const;
+
+	// ä¸­å¿ƒãƒ•ãƒ¬ãƒ¼ãƒ ã®frameDataã®ä¸­èº«ã‚’å‡ºåŠ›
+    void logFirstFrameData() const {
+        if (!dataBuffer.empty()) {
+            const FrameData& firstFrame = dataBuffer.front();
+            std::cout << "First Frame Index: " << firstFrame.frameIndex
+                      << ", Scene Label: " << firstFrame.sceneLabel
+                      << ", Scene Prob: " << firstFrame.sceneProb
+                      << ", Event Probs Sum: " << firstFrame.eventProbsSum << std::endl;
+        }
+	}
+
+	// ãƒ‡ãƒãƒƒã‚°ç”¨ï¼šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å†…ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’è¡¨ç¤º
+    void logWindowIndices() const {
+        std::cout << "Window Indices: ";
+        for (const auto& data : dataBuffer) {
+            std::cout << data.frameIndex << " ";
+        }
+        std::cout << std::endl;
+	}
+};
 
 
 std::optional<int> processSceneLabelSlidingWindow(
     const std::deque<std::vector<int>>& windowSceneLabelBuffer,
     int prevSceneLabel
 );
+
+
+// ã‚¹ãƒ©ã‚¤ãƒ‡ã‚£ãƒ³ã‚°ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«ã‚ˆã‚‹ãƒ©ãƒ™ãƒ«æ±ºå®šã‚’è¡Œã†ã‚¯ãƒ©ã‚¹
+class SceneLabelSmoother {
+public:
+    // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ï¼šãƒ©ãƒ™ãƒ«æ•°ã¨ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’æŒ‡å®š
+    SceneLabelSmoother(int numSceneLabels, int windowSize);
+
+    // æ–°ã—ã„ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’è¿½åŠ ã—ã¦ã€ä¸­å¿ƒãƒ©ãƒ™ãƒ«ã‚’è¿”ã™ï¼ˆå¤‰åŒ–ãªã—/nullæ™‚ã¯ nulloptï¼‰
+    std::optional<int> processSceneLabel(const std::vector<std::vector<int>>& windowSceneLabels);
+
+    // ä¸­å¿ƒãƒ•ãƒ¬ãƒ¼ãƒ ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹å–å¾—ã®ãŸã‚ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆï¼ˆwindowSize / 2ï¼‰
+    int getWindowOffset() const;
+
+private:
+    int numSceneLabels;
+    int windowSize;
+    int halfWindow;
+    int prevLabel = -1;
+
+    std::deque<std::vector<int>> windowBuffer; // ãƒ©ãƒ™ãƒ«ã®å±¥æ­´
+};

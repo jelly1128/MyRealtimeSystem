@@ -1,65 +1,6 @@
 ﻿#include "sliding_window.h"
 
 
-std::vector<int> slidingWindowExtractSceneLabels(
-    const std::vector<std::vector<int>>& treatmentLabels,
-    int windowSize,
-    int step,
-    int numSceneClasses
-) {
-    // numSceneClassesの（0〜5）のシーンクラスのみを抽出した新たな配列を作成
-    std::vector<std::vector<int>> sceneLabels;
-    for (const std::vector<int>& vec : treatmentLabels) {
-        // 各フレームについて、先頭numMainClasses分だけを抽出
-        sceneLabels.emplace_back(vec.begin(), vec.begin() + numSceneClasses);
-    }
-
-    std::vector<int> sceneSingleLabels; // 出力結果（中央フレームごとのシーンラベル）
-    int numFrames = sceneLabels.size();
-    int halfWin = windowSize / 2;      // ウィンドウの中央位置
-
-    int prevLabel = -1; // 直前のラベルを保持（同点多数決時に使用、最初は未定義）
-
-    // スライディングウィンドウを左から右にずらしていく
-    for (int start = 0; start <= numFrames - windowSize; start += step) {
-        std::vector<int> classCounts(numSceneClasses, 0);
-
-        // 現ウィンドウ内で各クラスの合計値を計算
-        for (int i = start; i < start + windowSize; ++i) {
-            for (int c = 0; c < numSceneClasses; ++c) {
-                classCounts[c] += sceneLabels[i][c];
-            }
-        }
-
-        // 最も多く出現したクラスのインデックスを抽出（複数あればすべて取得）
-        int maxCount = *std::max_element(classCounts.begin(), classCounts.end());
-        std::vector<int> maxIndices;
-        for (int c = 0; c < numSceneClasses; ++c) {
-            if (classCounts[c] == maxCount) maxIndices.push_back(c);
-        }
-
-        int label;
-        if (maxIndices.size() == 1) {
-            // 単独最大のクラスがあればそれを採用
-            label = maxIndices[0];
-        }
-        else if (!sceneSingleLabels.empty()) {
-            // 同点の場合は直前のラベルを再利用
-            label = sceneSingleLabels.back();
-        }
-        else {
-            // 最初のウィンドウのみ、直前ラベルが無いので最小インデックスのクラスを採用
-            label = maxIndices[0];
-        }
-
-        // 中央フレームに決定したラベルを格納
-        sceneSingleLabels.push_back(label);
-    }
-
-    return sceneSingleLabels;
-}
-
-
 // スライディングウィンドウを使用してシーンラベルを1つにまとめる関数
 std::optional<int> processSceneLabelSlidingWindow(
     const std::deque<std::vector<int>>& windowSceneLabelBuffer,
@@ -95,4 +36,99 @@ std::optional<int> processSceneLabelSlidingWindow(
     }
 
     return decidedLabel;
+}
+
+
+// スライディングウィンドウ内のデータを管理するクラス
+FrameWindow::FrameWindow(int windowSize)
+    : windowSize(windowSize), halfWindow(windowSize / 2) {
+}
+
+void FrameWindow::push(const cv::Mat& image, const FrameData& data) {
+    imageBuffer.push_back(image.clone());  // clone推奨：外側で画像が破棄される可能性に備える
+    dataBuffer.push_back(data);
+
+    if (imageBuffer.size() > windowSize) imageBuffer.pop_front();
+    if (dataBuffer.size() > windowSize) dataBuffer.pop_front();
+}
+
+const cv::Mat& FrameWindow::getCenterImage() const {
+    return imageBuffer[halfWindow];
+}
+
+const FrameData& FrameWindow::getCenterData() const {
+    return dataBuffer[halfWindow];
+}
+
+int FrameWindow::getCenterFrameIndex() const {
+    return dataBuffer[halfWindow].frameIndex;
+}
+
+int FrameWindow::getWindowOffset() const {
+    return halfWindow;
+}
+
+void FrameWindow::setCenterSceneLabel(int centerLabel){
+    if (!dataBuffer.empty()) {
+		dataBuffer[halfWindow].sceneLabel = centerLabel;  // 中心フレームのシーンラベルを設定
+		dataBuffer[halfWindow].sceneProb = dataBuffer[halfWindow].treatmentProbabilities[centerLabel]; // シーン確率を更新
+    }
+}
+
+int FrameWindow::size() const {
+    return imageBuffer.size();
+}
+
+bool FrameWindow::isReady() const {
+    return imageBuffer.size() >= windowSize;
+}
+
+
+// スライディングウィンドウによるラベル決定を行うクラス
+SceneLabelSmoother::SceneLabelSmoother(int numSceneLabels, int windowSize)
+    : numSceneLabels(numSceneLabels), windowSize(windowSize), halfWindow(windowSize / 2) {
+}
+
+
+std::optional<int> SceneLabelSmoother::processSceneLabel(const std::vector<std::vector<int>>& windowSceneLabels) {
+	// ウィンドウ内に十分なデータがない場合は何もしない
+    if (windowSceneLabels.size() < windowSize) {
+        return std::nullopt;  // ウィンドウが満たされていない
+	}
+
+	// ウィンドウ内のラベルを集計
+    std::vector<int> classCounts(numSceneLabels, 0);
+    for (const auto& labels : windowSceneLabels) {
+        for (int i = 0; i < numSceneLabels; ++i) {
+            classCounts[i] += labels[i];
+        }
+    }
+
+	// 最も多いクラスを決定
+    int maxCount = *std::max_element(classCounts.begin(), classCounts.end());
+    std::vector<int> maxIndices;
+    for (int i = 0; i < numSceneLabels; ++i) {
+        if (classCounts[i] == maxCount) {
+            maxIndices.push_back(i);
+        }
+    }
+
+	// 決定されたラベルを選択
+    int decidedLabel;
+	if (maxIndices.size() == 1) {     // 明確な多数決
+        decidedLabel = maxIndices[0];
+    }
+	else if (prevLabel != -1) {       // 同点の場合、前回のラベルを再利用
+        decidedLabel = prevLabel;
+    }
+    else {
+        decidedLabel = 0;             // 初期値（白色光など）を返す
+    }
+
+    prevLabel = decidedLabel;
+    return decidedLabel;
+}
+
+int SceneLabelSmoother::getWindowOffset() const {
+    return halfWindow;
 }

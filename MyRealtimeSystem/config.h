@@ -99,12 +99,3 @@ struct FrameLabel {
     int biopsyLabel;            // 生検ラベル（0 or 1）
 };
 
-// サムネイル選定やスコア処理用のスコア付き構造体（処理中間用）
-// 1フレーム単位のデータを保持
-struct FrameData {
-    int frameIndex;                              // フレーム番号(デバッグ専用)
-    std::vector<float> treatmentProbabilities;   // 推論スコア（15クラス）
-    int sceneLabel = -1;                         // 平滑化されたラベル
-    float sceneProb = 0.0f;                      // シーンクラスの確率
-    float eventProbsSum = 0.0f;                  // イベントクラスの確率の合計
-};
