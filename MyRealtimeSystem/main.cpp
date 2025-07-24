@@ -5,7 +5,6 @@
 #include "result_writer.h"
 #include "sliding_window.h"
 #include "timeline_writer.h"
-#include "thumbnail.h"
 #include "thumbnail_selector.h"
 
 #include "debug.h"
@@ -269,7 +268,8 @@ int main() {
 	visualizeThumbnailsPerLabel(thumbs, TREATMENT_THUMNAIL_IMAGE_PATH, INPUT_WIDTH, INPUT_HEIGHT);
 
 	// log出力
-	//segmentManager.logSummary();
+	segmentManager.logSummary();
+	logFinalThumbnails(thumbs);
 
 	timerAll.stop();
 	closeLog();

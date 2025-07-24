@@ -39,9 +39,6 @@
     <ClCompile Include="src\sliding_window.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\thumbnail.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\thumbnail_slector.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -69,9 +66,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\sliding_window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\thumbnail.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\thumbnail_selector.h">

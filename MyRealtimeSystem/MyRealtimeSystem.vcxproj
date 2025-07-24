@@ -145,7 +145,6 @@
     <ClCompile Include="src\predictor.cpp" />
     <ClCompile Include="src\result_writer.cpp" />
     <ClCompile Include="src\sliding_window.cpp" />
-    <ClCompile Include="src\thumbnail.cpp" />
     <ClCompile Include="src\thumbnail_slector.cpp" />
     <ClCompile Include="src\timeline_writer.cpp" />
     <ClCompile Include="src\video_loader.cpp" />
@@ -160,7 +159,6 @@
     <ClInclude Include="include\predictor.h" />
     <ClInclude Include="include\result_writer.h" />
     <ClInclude Include="include\sliding_window.h" />
-    <ClInclude Include="include\thumbnail.h" />
     <ClInclude Include="include\thumbnail_selector.h" />
     <ClInclude Include="include\timeline_writer.h" />
     <ClInclude Include="include\video_loader.h" />

@@ -5,111 +5,83 @@
 #include <optional>
 
 
-// サムネイル選定やスコア処理用のスコア付き構造体（処理中間用）
-// 1フレーム単位のデータを保持
+/// ==========================
+/// @section フレーム情報構造体
+/// ==========================
+
+/**
+ * @brief サムネイル選定やスコア計算用、1フレーム単位の情報を格納
+ */
 struct FrameData {
-    int frameIndex;                              // フレーム番号(デバッグ専用)
-    std::vector<float> treatmentProbabilities;   // 推論スコア（15クラス）
-	std::vector<int> sceneBinaryLabels;          // バイナリ化されたシーンラベル（0〜5の主クラス）
-    int sceneLabel = -1;                         // 平滑化されたラベル
-    float sceneProb = 0.0f;                      // シーンクラスの確率
-    float eventProbsSum = 0.0f;                  // イベントクラスの確率の合計
+    int frameIndex;                              ///< フレーム番号
+    std::vector<float> treatmentProbabilities;   ///< 推論スコア（15クラス分）
+    std::vector<int> sceneBinaryLabels;          ///< シーンラベル（バイナリ、0～5主クラス）
+    int sceneLabel = -1;                         ///< 平滑化されたラベル
+    float sceneProb = 0.0f;                      ///< シーンラベルの確率
+    float eventProbsSum = 0.0f;                  ///< イベントクラス確率の合計
 };
 
 
-// スライディングウィンドウ内のデータを管理するクラス
+/// =============================
+/// @section スライディングウィンドウ管理
+/// =============================
+
+/**
+ * @brief ウィンドウ内に画像・ラベルデータをバッファ管理
+ */
 class FrameWindow {
 private:
-    int windowSize;
-    int halfWindow;
+	int windowSize;        ///< ウィンドウサイズ（フレーム数）
+	int halfWindow;        ///< ウィンドウの中心フレームインデックス（windowSize / 2）
 
-    std::deque<cv::Mat> imageBuffer;
-    std::deque<FrameData> dataBuffer;
+    std::deque<cv::Mat> windowedImages;         ///< ウィンドウ内の画像
+    std::deque<FrameData> windowedFrameData;    ///< ウィンドウ内のフレームデータ
 
 public:
     FrameWindow(int windowSize);
 
-	// ウィンドウ内にフレームを追加
+    /// 画像＋データをバッファに追加
     void push(const cv::Mat& image, const FrameData& data);
 
-    // 中心フレームの取得
+    /// ウィンドウ中心（解析対象）の画像・データ
     const cv::Mat& getCenterImage() const;
     const FrameData& getCenterData() const;
 
-    // 最新フレームのインデックス（バッファ先頭）を元に返す
-    int getCenterFrameIndex() const;
-
-    // 読み取り専用の参照を返す
-    const std::deque<FrameData>& getDataBuffer() const {
-        return dataBuffer;
-    }
-
-    // バッファの中心位置（windowSize / 2）
-    int getWindowOffset() const;
-
-    // ウィンドウ中心のシーンラベルを設定
+    /// ウィンドウ中心のシーンラベル書き換え
     void setCenterSceneLabel(int centerLabel);
 
-    // ウィンドウ内のフレームのシーンラベルを取得
-    std::vector<std::vector<int>> getSceneLabels() const {
-        std::vector<std::vector<int>> labels;
-        for (const auto& data : dataBuffer) {
-            labels.push_back(data.sceneBinaryLabels);
-        }
-        return labels;
-    }
+    /// ウィンドウ内の全フレームのシーンラベル配列取得
+    std::vector<std::vector<int>> getSceneLabels() const;
 
-    // バッファが満たされているか
-    bool isReady() const;
+    /// バッファ状態確認
+    const std::deque<FrameData>& getWindowedFrameData() const { return windowedFrameData; }
 
-	// バッファのサイズ(debug)
-    int size() const;
-
-	// 中心フレームのframeDataの中身を出力
-    void logFirstFrameData() const {
-        if (!dataBuffer.empty()) {
-            const FrameData& firstFrame = dataBuffer.front();
-            std::cout << "First Frame Index: " << firstFrame.frameIndex
-                      << ", Scene Label: " << firstFrame.sceneLabel
-                      << ", Scene Prob: " << firstFrame.sceneProb
-                      << ", Event Probs Sum: " << firstFrame.eventProbsSum << std::endl;
-        }
-	}
-
-	// デバッグ用：ウィンドウ内のインデックスを表示
-    void logWindowIndices() const {
-        std::cout << "Window Indices: ";
-        for (const auto& data : dataBuffer) {
-            std::cout << data.frameIndex << " ";
-        }
-        std::cout << std::endl;
-	}
+    // デバッグ出力
+    void logFirstFrameData() const;
 };
 
 
-std::optional<int> processSceneLabelSlidingWindow(
-    const std::deque<std::vector<int>>& windowSceneLabelBuffer,
-    int prevSceneLabel
-);
+/// ===============================================
+/// @section シーンラベル平滑化（スライディングウィンドウ）
+/// ===============================================
 
-
-// スライディングウィンドウによるラベル決定を行うクラス
+/**
+ * @brief 複数フレームのラベルを多数決で平滑化
+ */
 class SceneLabelSmoother {
-public:
-    // コンストラクタ：ラベル数とウィンドウサイズを指定
-    SceneLabelSmoother(int numSceneLabels, int windowSize);
-
-    // 新しいフレームを追加して、中心ラベルを返す（変化なし/null時は nullopt）
-    std::optional<int> processSceneLabel(const std::vector<std::vector<int>>& windowSceneLabels);
-
-    // 中心フレームのインデックス取得のためのオフセット（windowSize / 2）
-    int getWindowOffset() const;
-
 private:
     int numSceneLabels;
     int windowSize;
     int halfWindow;
     int prevLabel = -1;
 
-    std::deque<std::vector<int>> windowBuffer; // ラベルの履歴
+public:
+    /// コンストラクタ：ラベル数とウィンドウサイズを指定
+    SceneLabelSmoother(int numSceneLabels, int windowSize);
+
+    /// ウィンドウ内ラベルから多数決で中心ラベルを返す
+    std::optional<int> processSceneLabel(const std::vector<std::vector<int>>& windowSceneLabels);
+
+    /// 中心フレームオフセット（windowSize / 2）
+    int getWindowOffset() const;
 };

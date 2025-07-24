@@ -1,99 +1,99 @@
 ﻿#include "sliding_window.h"
 
 
-// スライディングウィンドウを使用してシーンラベルを1つにまとめる関数
-std::optional<int> processSceneLabelSlidingWindow(
-    const std::deque<std::vector<int>>& windowSceneLabelBuffer,
-	int prevSceneLabel
-) {
-	// シーンクラス数を取得
-	int numSceneClasses = windowSceneLabelBuffer.front().size();
-    std::vector<int> classCounts(numSceneClasses, 0);
+// =============================
+// @section FrameWindow 実装
+// =============================
 
-    // 現ウィンドウ内で各クラスの合計値を計算
-    for (int i = 0; i < windowSceneLabelBuffer.size(); ++i) {
-        for (int c = 0; c < numSceneClasses; ++c) {
-            classCounts[c] += windowSceneLabelBuffer[i][c];
-        }
-    }
-
-    // 最多クラスを抽出
-    int maxCount = *std::max_element(classCounts.begin(), classCounts.end());
-    std::vector<int> maxIndices;
-    for (int c = 0; c < numSceneClasses; ++c) {
-        if (classCounts[c] == maxCount) maxIndices.push_back(c);
-    }
-
-    int decidedLabel;
-    if (maxIndices.size() == 1) {
-        decidedLabel = maxIndices[0];  // 明確な多数決
-    }
-    else if (prevSceneLabel != -1) {
-        decidedLabel = prevSceneLabel; // 同点 → 前回のラベルを再利用
-    }
-    else {
-        decidedLabel = 0;  // 初回など → 白色光
-    }
-
-    return decidedLabel;
-}
-
-
-// スライディングウィンドウ内のデータを管理するクラス
+/**
+ * @brief コンストラクタ
+ * @param windowSize ウィンドウサイズ（フレーム数）
+ */
 FrameWindow::FrameWindow(int windowSize)
-    : windowSize(windowSize), halfWindow(windowSize / 2) {
-}
+    : windowSize(windowSize), halfWindow(windowSize / 2) {}
 
+
+/**
+ * @brief ウィンドウに画像＋データを追加
+ */
 void FrameWindow::push(const cv::Mat& image, const FrameData& data) {
-    imageBuffer.push_back(image.clone());  // clone推奨：外側で画像が破棄される可能性に備える
-    dataBuffer.push_back(data);
-
-    if (imageBuffer.size() > windowSize) imageBuffer.pop_front();
-    if (dataBuffer.size() > windowSize) dataBuffer.pop_front();
+    windowedImages.push_back(image.clone());  // clone必須:外で画像が消える場合に備える
+    windowedFrameData.push_back(data);
+    if (windowedImages.size() > windowSize) windowedImages.pop_front();
+    if (windowedFrameData.size() > windowSize) windowedFrameData.pop_front();
 }
 
+
+/**
+ * @brief ウィンドウ中心のデータを返す
+ */
 const cv::Mat& FrameWindow::getCenterImage() const {
-    return imageBuffer[halfWindow];
+    return windowedImages[halfWindow];
 }
 
 const FrameData& FrameWindow::getCenterData() const {
-    return dataBuffer[halfWindow];
+    return windowedFrameData[halfWindow];
 }
 
-int FrameWindow::getCenterFrameIndex() const {
-    return dataBuffer[halfWindow].frameIndex;
-}
 
-int FrameWindow::getWindowOffset() const {
-    return halfWindow;
-}
-
-void FrameWindow::setCenterSceneLabel(int centerLabel){
-    if (!dataBuffer.empty()) {
-		dataBuffer[halfWindow].sceneLabel = centerLabel;  // 中心フレームのシーンラベルを設定
-		dataBuffer[halfWindow].sceneProb = dataBuffer[halfWindow].treatmentProbabilities[centerLabel]; // シーン確率を更新
+/**
+ * @brief ウィンドウ中心フレームのsceneLabel・sceneProbを書き換える
+ */
+void FrameWindow::setCenterSceneLabel(int centerLabel) {
+    if (!windowedFrameData.empty()) {
+        windowedFrameData[halfWindow].sceneLabel = centerLabel;
+        windowedFrameData[halfWindow].sceneProb = windowedFrameData[halfWindow].treatmentProbabilities[centerLabel];
     }
 }
 
-int FrameWindow::size() const {
-    return imageBuffer.size();
+
+/**
+ * @brief ウィンドウ内のsceneラベル（バイナリ配列）リストを返す
+ */
+std::vector<std::vector<int>> FrameWindow::getSceneLabels() const {
+    std::vector<std::vector<int>> labels;
+    for (const auto& data : windowedFrameData) {
+        labels.push_back(data.sceneBinaryLabels);
+    }
+    return labels;
 }
 
-bool FrameWindow::isReady() const {
-    return imageBuffer.size() >= windowSize;
+
+/**
+ * @brief ウィンドウ内のフレームデータのログ出力
+ */
+void FrameWindow::logFirstFrameData() const {
+    if (!windowedFrameData.empty()) {
+        const FrameData& firstFrame = windowedFrameData.front();
+        std::cout << "First Frame Index: " << firstFrame.frameIndex
+            << ", Scene Label: " << firstFrame.sceneLabel
+            << ", Scene Prob: " << firstFrame.sceneProb
+            << ", Event Probs Sum: " << firstFrame.eventProbsSum << std::endl;
+    }
 }
 
 
-// スライディングウィンドウによるラベル決定を行うクラス
+// =============================
+// @section SceneLabelSmoother 実装
+// =============================
+
+/**
+ * @brief コンストラクタ
+ * @param numSceneLabels シーンラベル数
+ * @param windowSize     ウィンドウサイズ
+ */
 SceneLabelSmoother::SceneLabelSmoother(int numSceneLabels, int windowSize)
     : numSceneLabels(numSceneLabels), windowSize(windowSize), halfWindow(windowSize / 2) {
 }
 
 
+/**
+ * @brief ウィンドウ内ラベルから中心ラベルを決定
+ */
 std::optional<int> SceneLabelSmoother::processSceneLabel(const std::vector<std::vector<int>>& windowSceneLabels) {
 	// ウィンドウ内に十分なデータがない場合は何もしない
     if (windowSceneLabels.size() < windowSize) {
-        return std::nullopt;  // ウィンドウが満たされていない
+        return std::nullopt;
 	}
 
 	// ウィンドウ内のラベルを集計
@@ -129,6 +129,10 @@ std::optional<int> SceneLabelSmoother::processSceneLabel(const std::vector<std::
     return decidedLabel;
 }
 
+
+/**
+ * @brief ウィンドウのオフセット（中心フレームインデックス）を取得
+ */
 int SceneLabelSmoother::getWindowOffset() const {
     return halfWindow;
 }
