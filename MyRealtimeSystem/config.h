@@ -16,8 +16,8 @@ const std::string VIDEO_PATH = "D:/M1/動画とか/000001-002.mov";
 //const std::string VIDEO_NAME = "20210524100043_000001-001"; // 動画ファイル名
 //const std::string VIDEO_NAME = "20210531112330_000001-001"; // 動画ファイル名
 //const std::string VIDEO_NAME = "20211021093634_000001-001"; // 動画ファイル名
-//const std::string VIDEO_NAME = "20211021093634_000001-003"; // 動画ファイル名
-const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
+const std::string VIDEO_NAME = "20211021093634_000001-003"; // 動画ファイル名
+//const std::string VIDEO_NAME = "20220105102425_4"; // 動画ファイル名
 const std::string VIDEO_FOLDER_PATH = std::string("images/") + VIDEO_NAME + "/"; // 動画フォルダパス
 
 // ログ用のファイルパス

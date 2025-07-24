@@ -1,11 +1,6 @@
 #include "../include/thumbnail.h"
 
 
-//float computeDeeplearningScore(
-//
-//)
-
-
 float computeHighFrequencyEnergy(const cv::Mat& inputImg) {
     cv::Mat gray;
     if (inputImg.channels() == 3) {
